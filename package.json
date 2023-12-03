@@ -1,0 +1,9 @@
+{
+  "private": "true",
+  "scripts": {
+    "build": "cd @methodical-js/core && yarn build"
+  },
+  "workspaces": [
+    "@methodical-js/*"
+  ]
+}

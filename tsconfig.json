@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "module": "ES2015",
+    "noImplicitAny": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "declaration": true,
+    "sourceMap": false,
+    "strictNullChecks": true,
+    "target": "ES6",
+    "moduleResolution": "node",
+    "types": ["jest"],
+    "esModuleInterop": true,
+    "stripInternal": true
+  }
+}
