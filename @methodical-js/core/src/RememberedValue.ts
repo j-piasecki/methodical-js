@@ -1,5 +1,5 @@
-import { RememberNode } from "./RememberNode.js";
-import { WorkingTree } from "./WorkingTree.js";
+import { RememberNode } from './RememberNode.js'
+import { WorkingTree } from './WorkingTree.js'
 
 export class RememberedValue<T> {
   private _value: T
@@ -24,5 +24,9 @@ export class RememberedValue<T> {
       // changing remembered value might affect its siblings, so we need to queue an update for the parent
       WorkingTree.queueUpdate(this._context.parent!)
     }
+  }
+
+  public switchContext(context: RememberNode) {
+    this._context = context
   }
 }

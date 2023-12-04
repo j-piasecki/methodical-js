@@ -1,4 +1,4 @@
-import { NodeType } from "./NodeType.js"
+import { NodeType } from './NodeType.js'
 
 export class WorkingNode {
   public id: string | number
@@ -27,13 +27,15 @@ export class WorkingNode {
     return JSON.stringify(
       this,
       (k, v) => {
-        if (k === "parent" || k === '_context') {
+        if (k === 'parent' || k === '_context') {
           return v?.id
+        } else if (k === 'previousContext') {
+          return v !== undefined
         }
 
         return v
       },
-      2,
+      2
     )
   }
 }

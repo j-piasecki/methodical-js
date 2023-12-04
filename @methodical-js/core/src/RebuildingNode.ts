@@ -1,5 +1,5 @@
-import { NodeType } from "./NodeType.js"
-import { ViewNode } from "./ViewNode.js"
+import { NodeType } from './NodeType.js'
+import { ViewNode } from './ViewNode.js'
 
 export class RebuildingNode extends ViewNode {
   constructor(node: ViewNode) {
