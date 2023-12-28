@@ -21,9 +21,9 @@ View('App', () => {
   View('View3')
 })
 
-value!.value = 1
-
 console.log(WorkingTree.root.toString())
+
+value!.value = 1
 
 console.log(WorkingTree.hasPendingUpdate)
 WorkingTree.performUpdate()

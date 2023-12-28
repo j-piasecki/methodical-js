@@ -88,35 +88,11 @@ export class WorkingTree {
     const currentView = WorkingTree.current as ViewNode
     const node = new RememberNode(currentView._nextActionId++)
 
-    if (currentView.previousContext !== undefined) {
-      // try finding the path up to the previous context
-      let predecessor: WorkingNode | undefined = currentView
-      const path: (string | number)[] = [node.id]
-
-      while (predecessor !== undefined && predecessor.id !== currentView.previousContext!.id) {
-        path.unshift(predecessor.id)
-        predecessor = predecessor.parent
-      }
-
-      // if predecessor is undefined, it means that the previous context is not a parent of the current view
-      // otherwise, we can try to restore the value from the previous context, assuming the node at that path existed
-      const previousRememberedNode =
-        predecessor === undefined
-          ? undefined
-          : (currentView.previousContext!.getNodeFromPath(path) as RememberNode | undefined)
-
-      if (previousRememberedNode !== undefined) {
-        node.restoreValue(previousRememberedNode)
-      } else {
-        node.initializeValue(initialValue)
-      }
-    } else {
-      node.initializeValue(initialValue)
-    }
-
     // TODO: this may break during rebuild, the parent may be dropped from the current tree, not sure though
     node.parent = currentView
     currentView.children.push(node)
+
+    node.initializeOrRestore(initialValue)
 
     return node
   }
