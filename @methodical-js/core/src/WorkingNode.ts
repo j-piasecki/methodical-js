@@ -28,7 +28,7 @@ export class WorkingNode {
       this,
       (k, v) => {
         if (k === 'parent' || k === '_context') {
-          return v?.id
+          return v?.type === NodeType.Rebuilding ? `Rebuilding(${v?.id})` : v?.id
         } else if (k === 'previousContext') {
           return v !== undefined
         }

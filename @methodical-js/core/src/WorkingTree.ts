@@ -53,7 +53,13 @@ export class WorkingTree {
 
         WorkingTree.withContext(rebuildContext, nodeToUpdate.body!)
 
+        // move children from the rebuilding node to the node that is being rebuilt
+        // we also need to reassign the parent of the direct children so it points
+        // to the node that is being rebuilt
         nodeToUpdate.children = rebuildContext.children
+        for (const child of nodeToUpdate.children) {
+          child.parent = nodeToUpdate
+        }
       }
     }
   }
