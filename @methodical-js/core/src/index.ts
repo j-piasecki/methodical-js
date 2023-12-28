@@ -31,9 +31,17 @@ View('App', () => {
       }
     }, x.value, value.value);
   })
+
+  if (value.value === 0) {
+    View('ViewCond-0')
+  } else {
+    View('ViewCond-?')
+  }
+
   View('View3')
 })
 
+WorkingTree.performInitialRender()
 console.log(WorkingTree.root.toString())
 
 value!.value = 1
