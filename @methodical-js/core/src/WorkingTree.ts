@@ -1,3 +1,4 @@
+import { EffectNode, EffectType } from './EffectNode.js'
 import { PrefixTree } from './PrefixTree.js'
 import { RebuildingNode } from './RebuildingNode.js'
 import { RememberNode } from './RememberNode.js'
@@ -93,6 +94,20 @@ export class WorkingTree {
     currentView.children.push(node)
 
     node.initializeOrRestore(initialValue)
+
+    return node
+  }
+
+  public static createEffectNode(effect: EffectType, dependencies: unknown[]) {
+    // effect may only be called inside view node
+    const currentView = WorkingTree.current as ViewNode
+    const node = new EffectNode(currentView._nextActionId++)
+
+    // TODO: this may break during rebuild, the parent may be dropped from the current tree, not sure though
+    node.parent = currentView
+    currentView.children.push(node)
+
+    node.initializeOrRestore(effect, dependencies)
 
     return node
   }

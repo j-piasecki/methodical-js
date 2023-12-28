@@ -10,13 +10,26 @@ const remember = <T>(value: T) => {
   return rememberedNode.value
 }
 
-let value
+const sideEffect = (effect: () => void, ...dependencies: unknown[]) => {
+  WorkingTree.createEffectNode(effect, dependencies)
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let value: any
 
 View('App', () => {
   View('View1')
   value = remember(0)
   View('View2', () => {
     const x = remember(10)
+
+    sideEffect(() => {
+      console.log('effect', x.value, value.value)
+
+      return () => {
+        console.log('cleanup', x.value, value.value)
+      }
+    }, x.value, value.value);
   })
   View('View3')
 })
