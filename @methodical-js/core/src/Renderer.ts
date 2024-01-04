@@ -33,7 +33,7 @@ export class Renderer {
 
           lastFoundIndex = j + 1
           found = true
-          this.updateView(newChild)
+          this.updateView(previousChild, newChild)
           this.diffSubtrees(previousChild, newChild)
           break
         }
@@ -54,7 +54,7 @@ export class Renderer {
   }
 
   private createView(node: ViewNode) {
-    console.log("create view", node.id)
+    node.viewManager?.createView(node)
 
     for (const child of node.children) {
       if (isViewNode(child)) {
@@ -64,10 +64,16 @@ export class Renderer {
   }
 
   private dropView(node: ViewNode) {
-    console.log("drop view", node.id)
+    for (const child of node.children) {
+      if (isViewNode(child)) {
+        this.dropView(child)
+      }
+    }
+
+    node.viewManager?.dropView(node)
   }
 
-  private updateView(node: ViewNode) {
-    console.log("update view", node.id)
+  private updateView(oldNode: ViewNode, node: ViewNode) {
+    node.viewManager?.updateView(oldNode, node)
   }
 }

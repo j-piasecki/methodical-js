@@ -1,3 +1,4 @@
+import { BaseConfig } from './BaseConfig.js'
 import { EffectNode, EffectType } from './EffectNode.js'
 import { PrefixTree } from './PrefixTree.js'
 import { RebuildingNode } from './RebuildingNode.js'
@@ -5,6 +6,7 @@ import { RememberNode } from './RememberNode.js'
 import { Renderer } from './Renderer.js'
 import { RootNode } from './RootNode.js'
 import { ViewNode } from './ViewNode.js'
+import { ViewNodeManager } from './ViewNodeManager.js'
 import { WorkingNode } from './WorkingNode.js'
 
 export class WorkingTree {
@@ -76,10 +78,11 @@ export class WorkingTree {
     this.renderer.diffSubtrees(new RootNode(), WorkingTree.root)
   }
 
-  public static createViewNode(id: string | number, body?: () => void) {
+  public static createViewNode(config: BaseConfig, ViewNodeManager: ViewNodeManager, body?: () => void) {
     // remember may only be called inside view node
     const currentView = WorkingTree.current as ViewNode
-    const view = new ViewNode(id, body)
+    const view = new ViewNode(config.id, config, body)
+    view.viewManager = ViewNodeManager
 
     // TODO: this may break during rebuild, the parent may be dropped from the current tree, not sure though
     view.parent = currentView
