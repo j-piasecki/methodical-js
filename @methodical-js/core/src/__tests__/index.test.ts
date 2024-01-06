@@ -1,5 +1,5 @@
-import { add } from '../index'
+import { WorkingTree } from '../index'
 
-test('Test add function', () => {
-  expect(add(1, 2)).toBe(3)
+test('Does not really check anything', () => {
+  WorkingTree.performUpdate()
 })

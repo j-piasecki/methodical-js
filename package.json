@@ -1,7 +1,7 @@
 {
   "private": "true",
   "scripts": {
-    "build": "cd @methodical-js/core && yarn build"
+    "build": "cd @methodical-js/core && yarn build && cd ../web && yarn build"
   },
   "workspaces": [
     "@methodical-js/*",

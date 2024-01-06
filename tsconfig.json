@@ -1,13 +1,13 @@
 {
   "compilerOptions": {
-    "module": "ES2015",
+    "module": "esnext",
     "noImplicitAny": true,
     "removeComments": true,
     "preserveConstEnums": true,
-    "declaration": true,
+    "declaration": false,
     "sourceMap": false,
     "strictNullChecks": true,
-    "target": "ES6",
+    "target": "esnext",
     "moduleResolution": "node",
     "types": ["jest"],
     "esModuleInterop": true,
