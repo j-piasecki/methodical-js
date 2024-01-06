@@ -2,6 +2,7 @@
   "private": "true",
   "scripts": {
     "build": "cd @methodical-js/core && yarn build && cd ../web && yarn build",
+    "test": "cd @methodical-js/core && yarn test && cd ../web && yarn test",
     "prepare": "husky install"
   },
   "workspaces": [
