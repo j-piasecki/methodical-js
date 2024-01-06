@@ -39,12 +39,11 @@ const viewManager: ViewNodeManager = {
   },
 
   updateView(oldNode: ViewNode, newNode: ViewNode) {
-    const view = oldNode.viewReference as HTMLDivElement | undefined
+    const view = newNode.viewReference as HTMLDivElement | undefined
     if (view === undefined) {
       return
     }
 
-    newNode.viewReference = view
     console.log('update', oldNode.id, newNode.id)
 
     const oldConfig = oldNode.config as DivConfig

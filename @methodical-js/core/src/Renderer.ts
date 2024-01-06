@@ -74,6 +74,9 @@ export class Renderer {
   }
 
   private updateView(oldNode: ViewNode, node: ViewNode) {
+    // view reference should be kept between updates, I think this is resposibility of the framework
+    node.viewReference = oldNode.viewReference
+
     node.viewManager?.updateView(oldNode, node)
   }
 }
