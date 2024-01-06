@@ -1,0 +1,9 @@
+{
+  "preset": "ts-jest",
+  "testEnvironment": "node",
+  "transform": {
+    "^.+\\.ts?$": "ts-jest"
+  },
+  "resolver": "jest-ts-webcompat-resolver",
+  "transformIgnorePatterns": ["<rootDir>/node_modules/"]
+}
