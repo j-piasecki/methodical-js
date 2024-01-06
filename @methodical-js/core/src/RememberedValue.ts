@@ -3,9 +3,9 @@ import { WorkingTree } from './WorkingTree.js'
 
 export class RememberedValue<T> {
   private _value: T
-  private _context: RememberNode
+  private _context: RememberNode<T>
 
-  constructor(value: T, context: RememberNode) {
+  constructor(value: T, context: RememberNode<T>) {
     this._value = value
     this._context = context
   }
@@ -26,7 +26,8 @@ export class RememberedValue<T> {
     }
   }
 
-  public switchContext(context: RememberNode) {
+  /** @internal */
+  public switchContext(context: RememberNode<T>) {
     this._context = context
   }
 }
