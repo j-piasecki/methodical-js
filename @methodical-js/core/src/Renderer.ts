@@ -1,6 +1,6 @@
-import { NodeType } from "./NodeType.js";
-import { ViewNode } from "./ViewNode.js";
-import { WorkingNode } from "./WorkingNode.js";
+import { NodeType } from './NodeType.js'
+import { ViewNode } from './ViewNode.js'
+import { WorkingNode } from './WorkingNode.js'
 
 function isViewNode(node: WorkingNode): node is ViewNode {
   return node.type === NodeType.View

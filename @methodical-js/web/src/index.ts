@@ -11,18 +11,18 @@ export const sideEffect = (effect: () => void, ...dependencies: unknown[]) => {
 
 const Methodical = {
   init: (rootView: HTMLElement) => {
-    WorkingTree.setRootViewReference(rootView);
-    WorkingTree.performInitialRender();
+    WorkingTree.setRootViewReference(rootView)
+    WorkingTree.performInitialRender()
 
     function render() {
-      WorkingTree.performUpdate();
-      requestAnimationFrame(render);
+      WorkingTree.performUpdate()
+      requestAnimationFrame(render)
     }
 
-    requestAnimationFrame(render);
-  }
-};
+    requestAnimationFrame(render)
+  },
+}
 
-export default Methodical;
+export default Methodical
 
 export { Div } from './Div.js'

@@ -6,7 +6,7 @@ test('performInitialRender should call createView of ViewManager', () => {
   const View = createViewFunction(viewManager)
 
   View({ id: 'test' })
-  
+
   WorkingTree.performInitialRender()
 
   expect(viewManager.createView).toHaveBeenCalled()

@@ -3,7 +3,7 @@ import { ViewNode } from './ViewNode.js'
 
 export class RootNode extends ViewNode {
   constructor() {
-    super('#', {id: '#'})
+    super('#', { id: '#' })
     this.type = NodeType.Root
   }
 }

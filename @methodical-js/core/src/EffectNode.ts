@@ -2,7 +2,7 @@ import { NodeType } from './NodeType.js'
 import { ViewNode } from './ViewNode.js'
 import { WorkingNode } from './WorkingNode.js'
 
-export type EffectType = () => void | (() => (() => void))
+export type EffectType = () => void | (() => () => void)
 
 export class EffectNode extends WorkingNode {
   private effect: EffectType

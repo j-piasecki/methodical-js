@@ -12,7 +12,7 @@ const viewManager: ViewNodeManager = {
 
     const view = document.createElement('div')
     view.id = node.id as string
-    
+
     const config = node.config as DivConfig
 
     if (config.style !== undefined) {

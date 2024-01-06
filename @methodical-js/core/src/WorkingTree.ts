@@ -86,7 +86,11 @@ export class WorkingTree {
     WorkingTree.root.viewReference = viewReference
   }
 
-  public static createViewNode(config: BaseConfig, ViewNodeManager: ViewNodeManager, body?: () => void) {
+  public static createViewNode(
+    config: BaseConfig,
+    ViewNodeManager: ViewNodeManager,
+    body?: () => void
+  ) {
     // remember may only be called inside view node
     const currentView = WorkingTree.current as ViewNode
     const view = new ViewNode(config.id, config, body)
