@@ -4,6 +4,7 @@
     "build": "cd @methodical-js/core && yarn build"
   },
   "workspaces": [
-    "@methodical-js/*"
+    "@methodical-js/*",
+    "testApp"
   ]
 }

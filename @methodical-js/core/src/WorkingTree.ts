@@ -45,6 +45,10 @@ export class WorkingTree {
   }
 
   public static performUpdate() {
+    if (!this.updateQueued) {
+      return
+    }
+
     const pathsToUpdate = this.updatePaths.getPaths()
     this.updatePaths.clear()
     this.updateQueued = false
@@ -78,6 +82,10 @@ export class WorkingTree {
     this.renderer.diffSubtrees(new RootNode(), WorkingTree.root)
   }
 
+  public static setRootViewReference(viewReference: unknown) {
+    WorkingTree.root.viewReference = viewReference
+  }
+
   public static createViewNode(config: BaseConfig, ViewNodeManager: ViewNodeManager, body?: () => void) {
     // remember may only be called inside view node
     const currentView = WorkingTree.current as ViewNode
@@ -98,10 +106,10 @@ export class WorkingTree {
     return view
   }
 
-  public static createRememberNode(initialValue: unknown) {
+  public static createRememberNode<T>(initialValue: T) {
     // remember may only be called inside view node
     const currentView = WorkingTree.current as ViewNode
-    const node = new RememberNode(currentView._nextActionId++)
+    const node = new RememberNode<T>(currentView._nextActionId++)
 
     // TODO: this may break during rebuild, the parent may be dropped from the current tree, not sure though
     node.parent = currentView

@@ -3,8 +3,8 @@ import { RememberedValue } from './RememberedValue.js'
 import { ViewNode } from './ViewNode.js'
 import { WorkingNode } from './WorkingNode.js'
 
-export class RememberNode extends WorkingNode {
-  private _value: RememberedValue<unknown>
+export class RememberNode<T> extends WorkingNode {
+  private _value: RememberedValue<T>
 
   constructor(id: string | number) {
     super(id, NodeType.Remember)
@@ -14,16 +14,16 @@ export class RememberNode extends WorkingNode {
     return this._value
   }
 
-  private initializeValue(value: unknown) {
+  private initializeValue(value: T) {
     this._value = new RememberedValue(value, this)
   }
 
-  private restoreValue(previousNode: RememberNode) {
+  private restoreValue(previousNode: RememberNode<T>) {
     this._value = previousNode._value
     this._value.switchContext(this)
   }
 
-  public initializeOrRestore(initialValue: unknown) {
+  public initializeOrRestore(initialValue: T) {
     // remember may only be called inside view node
     const currentView = this.parent as ViewNode
 
@@ -42,7 +42,7 @@ export class RememberNode extends WorkingNode {
       const previousRememberedNode =
         predecessor === undefined
           ? undefined
-          : (currentView.previousContext!.getNodeFromPath(path) as RememberNode | undefined)
+          : (currentView.previousContext!.getNodeFromPath(path) as RememberNode<T> | undefined)
 
       if (previousRememberedNode !== undefined) {
         this.restoreValue(previousRememberedNode)
