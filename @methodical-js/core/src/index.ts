@@ -1,7 +1,21 @@
+import { BaseConfig } from './BaseConfig.js'
+import { ViewNodeManager } from './ViewNodeManager.js'
 import { WorkingTree } from './WorkingTree.js'
 
-const View = (id: string, body?: () => void) => {
-  const view = WorkingTree.createViewNode(id, body)
+const viewManager: ViewNodeManager = {
+  createView(node) {
+    console.log('create', node.id)
+  },
+  dropView(node) {
+    console.log('drop', node.id)
+  },
+  updateView(oldNode, newNode) {
+    console.log('update', oldNode.id, newNode.id)
+  },
+}
+
+const View = (config: BaseConfig, body?: () => void) => {
+  const view = WorkingTree.createViewNode(config, viewManager, body)
   return view
 }
 
@@ -17,10 +31,10 @@ const sideEffect = (effect: () => void, ...dependencies: unknown[]) => {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let value: any
 
-View('App', () => {
-  View('View1')
+View({id: 'App'}, () => {
+  View({id: 'View1'})
   value = remember(0)
-  View('View2', () => {
+  View({id: 'View2'}, () => {
     const x = remember(10)
 
     sideEffect(() => {
@@ -31,9 +45,17 @@ View('App', () => {
       }
     }, x.value, value.value);
   })
-  View('View3')
+
+  if (value.value === 0) {
+    View({id: 'ViewCond-0'})
+  } else {
+    View({id: 'ViewCond-?'})
+  }
+
+  View({id: 'View3'})
 })
 
+WorkingTree.performInitialRender()
 console.log(WorkingTree.root.toString())
 
 value!.value = 1

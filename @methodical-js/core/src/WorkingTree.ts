@@ -1,9 +1,12 @@
+import { BaseConfig } from './BaseConfig.js'
 import { EffectNode, EffectType } from './EffectNode.js'
 import { PrefixTree } from './PrefixTree.js'
 import { RebuildingNode } from './RebuildingNode.js'
 import { RememberNode } from './RememberNode.js'
+import { Renderer } from './Renderer.js'
 import { RootNode } from './RootNode.js'
 import { ViewNode } from './ViewNode.js'
+import { ViewNodeManager } from './ViewNodeManager.js'
 import { WorkingNode } from './WorkingNode.js'
 
 export class WorkingTree {
@@ -12,6 +15,8 @@ export class WorkingTree {
 
   private static updatePaths = new PrefixTree()
   private static updateQueued = false
+
+  private static renderer = new Renderer()
 
   public static get root() {
     return WorkingTree._root
@@ -54,6 +59,8 @@ export class WorkingTree {
 
         WorkingTree.withContext(rebuildContext, nodeToUpdate.body!)
 
+        this.renderer.diffSubtrees(nodeToUpdate, rebuildContext)
+
         // move children from the rebuilding node to the node that is being rebuilt
         // we also need to reassign the parent of the direct children so it points
         // to the node that is being rebuilt
@@ -65,10 +72,17 @@ export class WorkingTree {
     }
   }
 
-  public static createViewNode(id: string | number, body?: () => void) {
+  public static performInitialRender() {
+    // should be called only once, after the initial tree is built
+    // we diff the root node with an empty root node to render the initial tree
+    this.renderer.diffSubtrees(new RootNode(), WorkingTree.root)
+  }
+
+  public static createViewNode(config: BaseConfig, ViewNodeManager: ViewNodeManager, body?: () => void) {
     // remember may only be called inside view node
     const currentView = WorkingTree.current as ViewNode
-    const view = new ViewNode(id, body)
+    const view = new ViewNode(config.id, config, body)
+    view.viewManager = ViewNodeManager
 
     // TODO: this may break during rebuild, the parent may be dropped from the current tree, not sure though
     view.parent = currentView

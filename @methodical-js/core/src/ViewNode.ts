@@ -1,18 +1,24 @@
+import { BaseConfig } from './BaseConfig.js'
 import { NodeType } from './NodeType.js'
+import { ViewNodeManager } from './ViewNodeManager.js'
 import { WorkingNode } from './WorkingNode.js'
 
 export class ViewNode extends WorkingNode {
   public children: WorkingNode[]
   public body?: () => void
+  public config: BaseConfig
+  public viewManager?: ViewNodeManager
+  public viewReference?: unknown
 
   public _nextActionId = 0
 
   public previousContext?: ViewNode
 
-  constructor(id: string | number, body?: () => void) {
+  constructor(id: string | number, config: BaseConfig, body?: () => void) {
     super(id, NodeType.View)
     this.children = []
     this.body = body
+    this.config = config
   }
 
   public getNodeFromPath(path: (string | number)[]): WorkingNode | null {
