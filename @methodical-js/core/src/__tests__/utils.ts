@@ -1,14 +1,5 @@
 import { ViewNode, ViewNodeManager, WorkingTree, BaseConfig } from '../index'
 
-export const remember = <T>(value: T) => {
-  const rememberedNode = WorkingTree.createRememberNode(value)
-  return rememberedNode.value
-}
-
-export const sideEffect = (effect: () => void, ...dependencies: unknown[]) => {
-  return WorkingTree.createEffectNode(effect, dependencies)
-}
-
 export const createViewManager = ({
   createView,
   dropView,
@@ -25,8 +16,12 @@ export const createViewManager = ({
   }
 }
 
+interface ViewConfig extends BaseConfig {
+  mockProp?: number
+}
+
 export const createViewFunction = (viewManager: ViewNodeManager) => {
-  return (config: BaseConfig, body?: () => void) => {
+  return (config: ViewConfig, body?: () => void) => {
     const view = WorkingTree.createViewNode(config, viewManager, body)
     return view
   }

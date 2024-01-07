@@ -30,6 +30,13 @@ export class WorkingTree {
     return this.updateQueued
   }
 
+  public static reset() {
+    WorkingTree._root = new RootNode()
+    WorkingTree._current = WorkingTree._root
+    this.updatePaths = new PrefixTree()
+    this.updateQueued = false
+  }
+
   public static withContext(context: WorkingNode, fun?: () => void) {
     if (fun !== undefined) {
       const previousContext = WorkingTree.current
