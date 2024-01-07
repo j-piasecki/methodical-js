@@ -12,7 +12,7 @@ export class ViewNode extends WorkingNode {
 
   public _nextActionId = 0
 
-  public previousContext?: ViewNode
+  public predecessorNode?: ViewNode
   public isRestored = false
 
   constructor(id: string | number, config: BaseConfig, body?: () => void) {

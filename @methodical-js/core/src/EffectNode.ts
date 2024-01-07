@@ -47,7 +47,7 @@ export class EffectNode extends WorkingNode {
   }
 
   public initializeOrRestore(effect: EffectType, dependencies?: unknown[]) {
-    const previousEffectNode = this.findInPreviousContext()
+    const previousEffectNode = this.findPredecessorNode()
 
     if (previousEffectNode !== undefined) {
       this.restore(previousEffectNode, effect, dependencies ?? [])

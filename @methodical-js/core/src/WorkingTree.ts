@@ -67,7 +67,7 @@ export class WorkingTree {
       if (nodeToUpdate !== null) {
         const rebuildContext = new RebuildingNode(nodeToUpdate)
         // set previous context to the node that is being rebuilt so that remembered values can be restored
-        rebuildContext.previousContext = nodeToUpdate
+        rebuildContext.predecessorNode = nodeToUpdate
 
         WorkingTree.withContext(rebuildContext, nodeToUpdate.body!)
 
@@ -107,22 +107,23 @@ export class WorkingTree {
     // TODO: this may break during rebuild, the parent may be dropped from the current tree, not sure though
     view.parent = currentView
 
-    // propagate previous context during rebuild, so that remembered values can be restored in children
-    view.previousContext = view.findInPreviousContext()
+    // propagate predecessor during rebuild, so that remembered values can be restored in children and for
+    // optimization purposes, so that we can skip updating the view if the config is the same and the view is pure
+    view.predecessorNode = view.findPredecessorNode()
     currentView.children.push(view)
 
     if (
       view.config.pure !== true ||
-      view.previousContext === undefined ||
-      !deepEqual(view.previousContext.config, view.config)
+      view.predecessorNode === undefined ||
+      !deepEqual(view.predecessorNode.config, view.config)
     ) {
       if (body !== undefined) {
         WorkingTree.withContext(view, body)
       }
     } else {
       // TODO: this will break when the body function changes but the config stays the same, TBD whether this is a problem
-      // if the config is the same, we can reuse the children from the previous context
-      view.children = view.previousContext.children
+      // if the config is the same, we can reuse the children from the predecessor
+      view.children = view.predecessorNode.children
       for (const child of view.children) {
         child.parent = view
       }
@@ -131,8 +132,8 @@ export class WorkingTree {
       view.isRestored = true
     }
 
-    // we don't need to keep the reference to the previous context after children are calculated
-    view.previousContext = undefined
+    // we don't need to keep the reference to the predecessor after children are calculated
+    view.predecessorNode = undefined
 
     return view
   }

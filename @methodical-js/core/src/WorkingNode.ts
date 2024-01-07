@@ -24,16 +24,16 @@ export class WorkingNode {
     return path
   }
 
-  public findInPreviousContext(): typeof this | undefined {
+  public findPredecessorNode(): typeof this | undefined {
     // only view nodes can have children
     const currentView = this.parent as ViewNode
 
-    if (currentView.previousContext !== undefined) {
+    if (currentView.predecessorNode !== undefined) {
       // try finding the path up to the previous context
       let predecessor: WorkingNode | undefined = currentView
       const path: (string | number)[] = [this.id]
 
-      while (predecessor !== undefined && predecessor.id !== currentView.previousContext!.id) {
+      while (predecessor !== undefined && predecessor.id !== currentView.predecessorNode!.id) {
         path.unshift(predecessor.id)
         predecessor = predecessor.parent
       }
@@ -43,7 +43,7 @@ export class WorkingNode {
       const previousNode =
         predecessor === undefined
           ? undefined
-          : (currentView.previousContext!.getNodeFromPath(path) as typeof this | undefined)
+          : (currentView.predecessorNode!.getNodeFromPath(path) as typeof this | undefined)
 
       return previousNode
     }
@@ -57,7 +57,7 @@ export class WorkingNode {
       (k, v) => {
         if (k === 'parent' || k === '_context') {
           return v?.type === NodeType.Rebuilding ? `Rebuilding(${v?.id})` : v?.id
-        } else if (k === 'previousContext') {
+        } else if (k === 'predecessorNode') {
           if (v === undefined) {
             return false
           } else {

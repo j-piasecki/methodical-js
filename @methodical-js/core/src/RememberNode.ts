@@ -23,7 +23,7 @@ export class RememberNode<T> extends WorkingNode {
   }
 
   public initializeOrRestore(initialValue: T) {
-    const previousRememberedNode = this.findInPreviousContext()
+    const previousRememberedNode = this.findPredecessorNode()
 
     if (previousRememberedNode !== undefined) {
       this.restoreValue(previousRememberedNode)
