@@ -7,7 +7,8 @@
   },
   "workspaces": [
     "@methodical-js/*",
-    "testApp"
+    "testApp",
+    "canvasApp"
   ],
   "lint-staged": {
     "*.{js,ts}": [
