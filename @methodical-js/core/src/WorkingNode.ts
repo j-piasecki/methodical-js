@@ -1,4 +1,5 @@
 import { NodeType } from './NodeType.js'
+import type { ViewNode } from './ViewNode.js'
 
 export class WorkingNode {
   public id: string | number
@@ -23,6 +24,33 @@ export class WorkingNode {
     return path
   }
 
+  public findInPreviousContext(): typeof this | undefined {
+    // only view nodes can have children
+    const currentView = this.parent as ViewNode
+
+    if (currentView.previousContext !== undefined) {
+      // try finding the path up to the previous context
+      let predecessor: WorkingNode | undefined = currentView
+      const path: (string | number)[] = [this.id]
+
+      while (predecessor !== undefined && predecessor.id !== currentView.previousContext!.id) {
+        path.unshift(predecessor.id)
+        predecessor = predecessor.parent
+      }
+
+      // if predecessor is undefined, it means that the previous context is not a parent of the current view
+      // otherwise, assuming the node at the found path existed, we have found the corresponding node in the previous context
+      const previousNode =
+        predecessor === undefined
+          ? undefined
+          : (currentView.previousContext!.getNodeFromPath(path) as typeof this | undefined)
+
+      return previousNode
+    }
+
+    return undefined
+  }
+
   public toString() {
     return JSON.stringify(
       this,
@@ -30,7 +58,11 @@ export class WorkingNode {
         if (k === 'parent' || k === '_context') {
           return v?.type === NodeType.Rebuilding ? `Rebuilding(${v?.id})` : v?.id
         } else if (k === 'previousContext') {
-          return v !== undefined
+          if (v === undefined) {
+            return false
+          } else {
+            return `true, ${v.id}`
+          }
         }
 
         return v

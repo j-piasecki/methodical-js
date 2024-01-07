@@ -1,6 +1,5 @@
 import { NodeType } from './NodeType.js'
 import { RememberedValue } from './RememberedValue.js'
-import { ViewNode } from './ViewNode.js'
 import { WorkingNode } from './WorkingNode.js'
 
 export class RememberNode<T> extends WorkingNode {
@@ -24,31 +23,10 @@ export class RememberNode<T> extends WorkingNode {
   }
 
   public initializeOrRestore(initialValue: T) {
-    // remember may only be called inside view node
-    const currentView = this.parent as ViewNode
+    const previousRememberedNode = this.findInPreviousContext()
 
-    if (currentView.previousContext !== undefined) {
-      // try finding the path up to the previous context
-      let predecessor: WorkingNode | undefined = currentView
-      const path: (string | number)[] = [this.id]
-
-      while (predecessor !== undefined && predecessor.id !== currentView.previousContext!.id) {
-        path.unshift(predecessor.id)
-        predecessor = predecessor.parent
-      }
-
-      // if predecessor is undefined, it means that the previous context is not a parent of the current view
-      // otherwise, we can try to restore the value from the previous context, assuming the node at that path existed
-      const previousRememberedNode =
-        predecessor === undefined
-          ? undefined
-          : (currentView.previousContext!.getNodeFromPath(path) as RememberNode<T> | undefined)
-
-      if (previousRememberedNode !== undefined) {
-        this.restoreValue(previousRememberedNode)
-      } else {
-        this.initializeValue(initialValue)
-      }
+    if (previousRememberedNode !== undefined) {
+      this.restoreValue(previousRememberedNode)
     } else {
       this.initializeValue(initialValue)
     }
