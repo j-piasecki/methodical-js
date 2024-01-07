@@ -112,6 +112,7 @@ export class WorkingTree {
     currentView.children.push(view)
 
     if (
+      view.config.pure !== true ||
       view.previousContext === undefined ||
       !deepEqual(view.previousContext.config, view.config)
     ) {
