@@ -33,8 +33,12 @@ export class Renderer {
 
           lastFoundIndex = j + 1
           found = true
-          this.updateView(previousChild, newChild)
-          this.diffSubtrees(previousChild, newChild)
+
+          // if the node is restored, we don't need to update it as it's state is the same as in old tree
+          if (!newChild.isRestored) {
+            this.updateView(previousChild, newChild)
+            this.diffSubtrees(previousChild, newChild)
+          }
           break
         }
       }
