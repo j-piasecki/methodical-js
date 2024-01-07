@@ -1,14 +1,5 @@
 import { WorkingTree } from '@methodical-js/core'
 
-export const remember = <T>(value: T) => {
-  const rememberedNode = WorkingTree.createRememberNode(value)
-  return rememberedNode.value
-}
-
-export const sideEffect = (effect: () => void, ...dependencies: unknown[]) => {
-  return WorkingTree.createEffectNode(effect, dependencies)
-}
-
 const Methodical = {
   init: (rootView: HTMLElement) => {
     WorkingTree.setRootViewReference(rootView)
@@ -25,4 +16,5 @@ const Methodical = {
 
 export default Methodical
 
+export { remember, sideEffect } from '@methodical-js/core'
 export { Div } from './Div.js'
