@@ -13,6 +13,7 @@ export class ViewNode extends WorkingNode {
   public _nextActionId = 0
 
   public previousContext?: ViewNode
+  public isRestored = false
 
   constructor(id: string | number, config: BaseConfig, body?: () => void) {
     super(id, NodeType.View)
@@ -21,7 +22,7 @@ export class ViewNode extends WorkingNode {
     this.config = config
   }
 
-  public getNodeFromPath(path: (string | number)[]): WorkingNode | null {
+  public getNodeFromPath(path: (string | number)[]): WorkingNode | undefined {
     let current: WorkingNode = this
     let index = 0
     if (path[index] === current.id) {
@@ -44,7 +45,7 @@ export class ViewNode extends WorkingNode {
       }
 
       if (!found) {
-        return null
+        return undefined
       }
     }
 

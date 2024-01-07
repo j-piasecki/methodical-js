@@ -8,6 +8,7 @@ import { RootNode } from './RootNode.js'
 import { ViewNode } from './ViewNode.js'
 import { ViewNodeManager } from './ViewNodeManager.js'
 import { WorkingNode } from './WorkingNode.js'
+import { deepEqual } from './utils.js'
 
 export class WorkingTree {
   private static _root: RootNode = new RootNode()
@@ -107,12 +108,30 @@ export class WorkingTree {
     view.parent = currentView
 
     // propagate previous context during rebuild, so that remembered values can be restored in children
-    view.previousContext = currentView.previousContext
+    view.previousContext = view.findInPreviousContext()
     currentView.children.push(view)
 
-    if (body !== undefined) {
-      WorkingTree.withContext(view, body)
+    if (
+      view.previousContext === undefined ||
+      !deepEqual(view.previousContext.config, view.config)
+    ) {
+      if (body !== undefined) {
+        WorkingTree.withContext(view, body)
+      }
+    } else {
+      // TODO: this will break when the body function changes but the config stays the same, TBD whether this is a problem
+      // if the config is the same, we can reuse the children from the previous context
+      view.children = view.previousContext.children
+      for (const child of view.children) {
+        child.parent = view
+      }
+
+      // if the config stays the same, we can skip updating the view
+      view.isRestored = true
     }
+
+    // we don't need to keep the reference to the previous context after children are calculated
+    view.previousContext = undefined
 
     return view
   }
