@@ -1,5 +1,7 @@
 import { BaseConfig } from './BaseConfig.js'
 import { EffectNode, EffectType } from './EffectNode.js'
+import { EventNode } from './EventNode.js'
+import { EventNodeManager } from './EventNodeManager.js'
 import { PrefixTree } from './PrefixTree.js'
 import { RebuildingNode } from './RebuildingNode.js'
 import { RememberNode } from './RememberNode.js'
@@ -136,6 +138,26 @@ export class WorkingTree {
     view.predecessorNode = undefined
 
     return view
+  }
+
+  public static createEventNode<T, U>(
+    name: string,
+    handler: (event: T) => void,
+    eventManager: EventNodeManager<U>,
+    dependencies: unknown[]
+  ) {
+    // effect may only be called inside view node
+    const currentView = WorkingTree.current as ViewNode
+    const node = new EventNode(currentView._nextActionId++, name)
+    node.eventManager = eventManager
+
+    // TODO: this may break during rebuild, the parent may be dropped from the current tree, not sure though
+    node.parent = currentView
+    currentView.children.push(node)
+
+    node.initializeOrRestore(handler, dependencies)
+
+    return node
   }
 
   public static createRememberNode<T>(initialValue: T) {

@@ -1,3 +1,4 @@
+import { EventNodeManager } from './EventNodeManager.js'
 import { WorkingTree } from './WorkingTree.js'
 
 export { WorkingTree } from './WorkingTree.js'
@@ -15,4 +16,13 @@ export const remember = <T>(value: T) => {
 
 export const sideEffect = (effect: () => void, ...dependencies: unknown[]) => {
   return WorkingTree.createEffectNode(effect, dependencies)
+}
+
+export const eventHandler = <T, U>(
+  name: string,
+  handler: (event: T) => void,
+  eventManager: EventNodeManager<U>,
+  ...dependencies: unknown[]
+) => {
+  return WorkingTree.createEventNode(name, handler, eventManager, dependencies)
 }

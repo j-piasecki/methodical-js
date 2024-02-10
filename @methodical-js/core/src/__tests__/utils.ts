@@ -1,3 +1,4 @@
+import { EventNodeManager } from '../EventNodeManager'
 import { ViewNode, ViewNodeManager, WorkingTree, BaseConfig } from '../index'
 
 export const createViewManager = ({
@@ -13,6 +14,22 @@ export const createViewManager = ({
     createView: createView ?? (() => {}),
     dropView: dropView ?? (() => {}),
     updateView: updateView ?? (() => {}),
+  }
+}
+
+export const createEventManager = ({
+  registerHandler,
+  unregisterHandler,
+  updateHandler,
+}: {
+  registerHandler?: (target?: number) => void
+  unregisterHandler?: (target?: number) => void
+  updateHandler?: (target?: number) => void
+}): EventNodeManager<number> => {
+  return {
+    registerHandler: registerHandler ?? (() => {}),
+    unregisterHandler: unregisterHandler ?? (() => {}),
+    updateHandler: updateHandler ?? (() => {}),
   }
 }
 

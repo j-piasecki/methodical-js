@@ -1,9 +1,14 @@
+import { EventNode } from './EventNode.js'
 import { NodeType } from './NodeType.js'
 import { ViewNode } from './ViewNode.js'
 import { WorkingNode } from './WorkingNode.js'
 
 function isViewNode(node: WorkingNode): node is ViewNode {
   return node.type === NodeType.View
+}
+
+function isEventNode(node: WorkingNode): node is EventNode<unknown, unknown> {
+  return node.type === NodeType.Event
 }
 
 export class Renderer {
@@ -63,6 +68,8 @@ export class Renderer {
     for (const child of node.children) {
       if (isViewNode(child)) {
         this.createView(child)
+      } else if (isEventNode(child)) {
+        child.registerHandler()
       }
     }
   }
@@ -71,6 +78,8 @@ export class Renderer {
     for (const child of node.children) {
       if (isViewNode(child)) {
         this.dropView(child)
+      } else if (isEventNode(child)) {
+        child.unregisterHandler()
       }
     }
 

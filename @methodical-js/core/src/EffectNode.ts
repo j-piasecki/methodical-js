@@ -1,5 +1,6 @@
 import { NodeType } from './NodeType.js'
 import { WorkingNode } from './WorkingNode.js'
+import { compareDependencies } from './utils.js'
 
 export type EffectType = () => void | (() => () => void)
 
@@ -20,19 +21,7 @@ export class EffectNode extends WorkingNode {
 
   private restore(previous: EffectNode, effect: EffectType, dependencies: unknown[]) {
     this.dependencies = dependencies
-
-    let areDependenciesEqual = true
-    // check if dependencies are equal
-    if (this.dependencies.length !== previous.dependencies.length) {
-      areDependenciesEqual = false
-    } else {
-      for (let i = 0; i < this.dependencies.length; i++) {
-        if (this.dependencies[i] !== previous.dependencies[i]) {
-          areDependenciesEqual = false
-          break
-        }
-      }
-    }
+    const areDependenciesEqual = compareDependencies(previous.dependencies, dependencies)
 
     // if dependencies are equal, we can reuse the effect and cleanup
     if (areDependenciesEqual) {
