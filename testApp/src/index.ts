@@ -27,7 +27,7 @@ Div(
           id: 'test5',
           style: { width: '100px', height: '100px', backgroundColor: innerBackgroundColor.value },
         }, () => {
-          on('click', (e: any) => {
+          on('click', (e) => {
             e.stopPropagation()
             if (innerBackgroundColor.value === 'red') {
               innerBackgroundColor.value = 'magenta'

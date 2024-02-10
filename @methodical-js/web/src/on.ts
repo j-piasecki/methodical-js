@@ -13,6 +13,9 @@ const WebEventNodeManager: EventNodeManager<HTMLElement> = {
   },
 }
 
-export function on(name: string, handler: (event: unknown) => void, ...dependencies: unknown[]) {
+export function on(name: 'click', handler: (event: PointerEvent) => void, ...dependencies: unknown[]): void
+export function on(name: string, handler: (event: unknown) => void, ...dependencies: unknown[]): void
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function on(name: string, handler: (event: any) => void, ...dependencies: unknown[]) {
   WorkingTree.createEventNode(name, handler, WebEventNodeManager, dependencies)
 }
