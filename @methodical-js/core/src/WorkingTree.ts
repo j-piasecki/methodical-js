@@ -7,6 +7,7 @@ import { RebuildingNode } from './RebuildingNode.js'
 import { RememberNode } from './RememberNode.js'
 import { Renderer } from './Renderer.js'
 import { RootNode } from './RootNode.js'
+import { Tracing } from './Tracing.js'
 import { ViewNode } from './ViewNode.js'
 import { ViewNodeManager } from './ViewNodeManager.js'
 import { WorkingNode } from './WorkingNode.js'
@@ -59,6 +60,9 @@ export class WorkingTree {
       return
     }
 
+    // trace starts one microsecond before the actual render starts so the layout is correct
+    const startTime = performance.now() - 0.001
+
     const pathsToUpdate = this.updatePaths.getPaths()
     this.updatePaths.clear()
     this.updateQueued = false
@@ -73,7 +77,7 @@ export class WorkingTree {
 
         WorkingTree.withContext(rebuildContext, nodeToUpdate.body!)
 
-        this.renderer.diffSubtrees(nodeToUpdate, rebuildContext)
+        this.renderer.renderUpdate(nodeToUpdate, rebuildContext)
 
         // move children from the rebuilding node to the node that is being rebuilt
         // we also need to reassign the parent of the direct children so it points
@@ -84,12 +88,15 @@ export class WorkingTree {
         }
       }
     }
+
+    const duration = performance.now() - startTime
+    Tracing.traceBuild('update', startTime, duration, { pathsToUpdate })
   }
 
   public static performInitialRender() {
     // should be called only once, after the initial tree is built
     // we diff the root node with an empty root node to render the initial tree
-    this.renderer.diffSubtrees(new RootNode(), WorkingTree.root)
+    this.renderer.renderUpdate(new RootNode(), WorkingTree.root)
   }
 
   public static setRootViewReference(viewReference: unknown) {
@@ -101,6 +108,8 @@ export class WorkingTree {
     ViewNodeManager: ViewNodeManager,
     body?: () => void
   ) {
+    const startTime = performance.now()
+
     // remember may only be called inside view node
     const currentView = WorkingTree.current as ViewNode
     const view = new ViewNode(config.id, config, body)
@@ -137,6 +146,9 @@ export class WorkingTree {
     // we don't need to keep the reference to the predecessor after children are calculated
     view.predecessorNode = undefined
 
+    const duration = performance.now() - startTime
+    Tracing.traceBuild(config.id, startTime, duration)
+
     return view
   }
 
@@ -146,6 +158,8 @@ export class WorkingTree {
     eventManager: EventNodeManager<U>,
     dependencies: unknown[]
   ) {
+    const startTime = performance.now()
+
     // effect may only be called inside view node
     const currentView = WorkingTree.current as ViewNode
     const node = new EventNode(currentView._nextActionId++, name)
@@ -157,10 +171,15 @@ export class WorkingTree {
 
     node.initializeOrRestore(handler, dependencies)
 
+    const duration = performance.now() - startTime
+    Tracing.traceBuild(`create ${name} event`, startTime, duration)
+
     return node
   }
 
   public static createRememberNode<T>(initialValue: T) {
+    const startTime = performance.now()
+
     // remember may only be called inside view node
     const currentView = WorkingTree.current as ViewNode
     const node = new RememberNode<T>(currentView._nextActionId++)
@@ -171,10 +190,15 @@ export class WorkingTree {
 
     node.initializeOrRestore(initialValue)
 
+    const duration = performance.now() - startTime
+    Tracing.traceBuild('create remember node', startTime, duration)
+
     return node
   }
 
   public static createEffectNode(effect: EffectType, dependencies: unknown[]) {
+    const startTime = performance.now()
+
     // effect may only be called inside view node
     const currentView = WorkingTree.current as ViewNode
     const node = new EffectNode(currentView._nextActionId++)
@@ -184,6 +208,9 @@ export class WorkingTree {
     currentView.children.push(node)
 
     node.initializeOrRestore(effect, dependencies)
+
+    const duration = performance.now() - startTime
+    Tracing.traceBuild('create effect node', startTime, duration)
 
     return node
   }
