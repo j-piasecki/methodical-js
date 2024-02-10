@@ -1,4 +1,4 @@
-import Methodical, { remember, Div } from '@methodical-js/web'
+import Methodical, { remember, Div, on } from '@methodical-js/web'
 
 Div(
   {
@@ -7,17 +7,36 @@ Div(
   },
   () => {
     const backgroundColor = remember('blue')
+    const innerBackgroundColor = remember('red')
 
     Div({
       id: 'test2',
       style: { width: '300px', height: '300px', backgroundColor: backgroundColor.value },
-      onClick: () => {
-        if (backgroundColor.value === 'blue') {
+    }, () => {
+      const bg = backgroundColor.value
+      on('click', () => {
+        if (bg === 'blue') {
           backgroundColor.value = 'green'
         } else {
           backgroundColor.value = 'blue'
         }
-      },
+      }, bg)
+
+      if (backgroundColor.value === 'blue') {
+        Div({
+          id: 'test5',
+          style: { width: '100px', height: '100px', backgroundColor: innerBackgroundColor.value },
+        }, () => {
+          on('click', (e: any) => {
+            e.stopPropagation()
+            if (innerBackgroundColor.value === 'red') {
+              innerBackgroundColor.value = 'magenta'
+            } else {
+              innerBackgroundColor.value = 'red'
+            }
+          })
+        })
+      }
     })
 
     Div({
