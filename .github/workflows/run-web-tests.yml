@@ -10,8 +10,8 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
-    steps:
-      - name: checkout
+    test:
+      - name: Checkout
         uses: actions/checkout@v2
       - name: Use Node.js 18
         uses: actions/setup-node@v2
@@ -20,6 +20,8 @@ jobs:
           cache: 'yarn'
       - name: Install node dependencies
         run: yarn
+      - name: Build
+        run: yarn build
       - name: Run tests
         working-directory: '@methodical-js/web'
         run: yarn test
