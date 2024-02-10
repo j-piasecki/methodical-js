@@ -3,7 +3,6 @@ import { ViewConfig } from './ViewConfig.js'
 
 interface DivConfig extends ViewConfig {
   style?: Partial<CSSStyleDeclaration>
-  onClick?: (event: MouseEvent) => void
 }
 
 const viewManager: ViewNodeManager = {
@@ -17,10 +16,6 @@ const viewManager: ViewNodeManager = {
 
     if (config.style !== undefined) {
       Object.assign(view.style, config.style)
-    }
-
-    if (config.onClick !== undefined) {
-      view.addEventListener('click', config.onClick)
     }
 
     if (node.parent !== undefined) {
@@ -46,18 +41,8 @@ const viewManager: ViewNodeManager = {
 
     console.log('update', oldNode.id, newNode.id)
 
-    const oldConfig = oldNode.config as DivConfig
+    const _oldConfig = oldNode.config as DivConfig
     const newConfig = newNode.config as DivConfig
-
-    if (oldConfig.onClick !== newConfig.onClick) {
-      if (oldConfig.onClick !== undefined) {
-        view.removeEventListener('click', oldConfig.onClick)
-      }
-
-      if (newConfig.onClick !== undefined) {
-        view.addEventListener('click', newConfig.onClick)
-      }
-    }
 
     if (newConfig.style !== undefined) {
       Object.assign(view.style, newConfig.style)

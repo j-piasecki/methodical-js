@@ -31,3 +31,21 @@ export function deepEqual(obj1: Record<string, any>, obj2: Record<string, any>) 
 function isPrimitive(obj: unknown) {
   return obj !== Object(obj)
 }
+
+// check if dependencies are equal, does shallow comparison
+export function compareDependencies(first: unknown[], second: unknown[]) {
+  let areDependenciesEqual = true
+
+  if (first.length !== second.length) {
+    areDependenciesEqual = false
+  } else {
+    for (let i = 0; i < first.length; i++) {
+      if (first[i] !== second[i]) {
+        areDependenciesEqual = false
+        break
+      }
+    }
+  }
+
+  return areDependenciesEqual
+}

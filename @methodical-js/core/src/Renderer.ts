@@ -1,9 +1,14 @@
+import { EventNode } from './EventNode.js'
 import { NodeType } from './NodeType.js'
 import { ViewNode } from './ViewNode.js'
 import { WorkingNode } from './WorkingNode.js'
 
 function isViewNode(node: WorkingNode): node is ViewNode {
   return node.type === NodeType.View
+}
+
+function isEventNode(node: WorkingNode): node is EventNode<unknown, unknown> {
+  return node.type === NodeType.Event
 }
 
 export class Renderer {
@@ -55,6 +60,14 @@ export class Renderer {
         this.dropView(node)
       }
     }
+
+    // go through the event nodes and update their handlers in the root node, above function will
+    // take care of events in child views
+    for (const child of newRoot.children) {
+      if (isEventNode(child)) {
+        child.updateHandler()
+      }
+    }
   }
 
   private createView(node: ViewNode) {
@@ -63,6 +76,8 @@ export class Renderer {
     for (const child of node.children) {
       if (isViewNode(child)) {
         this.createView(child)
+      } else if (isEventNode(child)) {
+        child.registerHandler()
       }
     }
   }
@@ -71,6 +86,8 @@ export class Renderer {
     for (const child of node.children) {
       if (isViewNode(child)) {
         this.dropView(child)
+      } else if (isEventNode(child)) {
+        child.unregisterHandler()
       }
     }
 
@@ -82,5 +99,11 @@ export class Renderer {
     node.viewReference = oldNode.viewReference
 
     node.viewManager?.updateView(oldNode, node)
+
+    for (const child of node.children) {
+      if (isEventNode(child)) {
+        child.updateHandler()
+      }
+    }
   }
 }
