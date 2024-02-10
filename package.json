@@ -4,6 +4,7 @@
     "build": "cd @methodical-js/core && yarn build && cd ../web && yarn build",
     "test": "cd @methodical-js/core && yarn test && cd ../web && yarn test",
     "format": "cd @methodical-js/core && yarn format && cd ../web && yarn format",
+    "lint": "cd @methodical-js/core && yarn lint && cd ../web && yarn lint",
     "prepare": "husky install"
   },
   "workspaces": [
