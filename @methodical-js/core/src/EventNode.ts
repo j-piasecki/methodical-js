@@ -7,6 +7,7 @@ import { compareDependencies } from './utils.js'
 export type EventHandler<T> = (event: T) => void
 
 export class EventNode<T, U> extends WorkingNode {
+  private previousHandler?: EventHandler<T>
   private handler: EventHandler<T>
   private dependencies: unknown[]
   private eventName: string
@@ -39,14 +40,7 @@ export class EventNode<T, U> extends WorkingNode {
       this.handler = previous.handler
     } else {
       // otherwise, we need to cleanup the previous handler and initialize a new one
-      // NOTE: this will break in case where updateView method drops the existing view and creates a new one
-      // this is called before the tree diffing stage
-      this.eventManager?.updateHandler(
-        this.getEventTarget(),
-        this.eventName,
-        handler,
-        previous.handler
-      )
+      this.previousHandler = previous.handler
       this.handler = handler
     }
   }
@@ -67,5 +61,19 @@ export class EventNode<T, U> extends WorkingNode {
 
   public registerHandler() {
     this.eventManager?.registerHandler(this.getEventTarget(), this.eventName, this.handler)
+  }
+
+  public updateHandler() {
+    // if the previous handler is defined, it means that the handler has changed and we need to update the event manager
+    if (this.previousHandler !== undefined) {
+      this.eventManager?.updateHandler(
+        this.getEventTarget(),
+        this.eventName,
+        this.handler,
+        this.previousHandler
+      )
+
+      this.previousHandler = undefined
+    }
   }
 }

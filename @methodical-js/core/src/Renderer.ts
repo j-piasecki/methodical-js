@@ -60,6 +60,14 @@ export class Renderer {
         this.dropView(node)
       }
     }
+
+    // go through the event nodes and update their handlers in the root node, above function will
+    // take care of events in child views
+    for (const child of newRoot.children) {
+      if (isEventNode(child)) {
+        child.updateHandler()
+      }
+    }
   }
 
   private createView(node: ViewNode) {
@@ -91,5 +99,11 @@ export class Renderer {
     node.viewReference = oldNode.viewReference
 
     node.viewManager?.updateView(oldNode, node)
+
+    for (const child of node.children) {
+      if (isEventNode(child)) {
+        child.updateHandler()
+      }
+    }
   }
 }
