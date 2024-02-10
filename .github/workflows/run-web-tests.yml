@@ -2,7 +2,7 @@ name: Test web
 on:
   pull_request:
     paths:
-      - '.github/workflows/run-core-tests.yml'
+      - '.github/workflows/run-web-tests.yml'
       - '@methodical-js/web/src/**'
   push:
     branches:
