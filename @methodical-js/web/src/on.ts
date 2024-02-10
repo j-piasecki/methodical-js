@@ -1,4 +1,4 @@
-import { EventNodeManager, WorkingTree } from "@methodical-js/core";
+import { EventNodeManager, WorkingTree } from '@methodical-js/core'
 
 const WebEventNodeManager: EventNodeManager<HTMLElement> = {
   registerHandler(target, name, handler) {
