@@ -10,16 +10,32 @@ export class Tracing {
   }
 
   // @internal
-  public static traceBuild(name: string, timestamp: number, duration: number, args?: Record<string, unknown>) {
+  public static traceBuild(
+    name: string,
+    timestamp: number,
+    duration: number,
+    args?: Record<string, unknown>
+  ) {
     this.addTrace(name, timestamp, duration, THREAD_BUILD, args)
   }
 
   // @internal
-  public static traceRender(name: string, timestamp: number, duration: number, args?: Record<string, unknown>) {
+  public static traceRender(
+    name: string,
+    timestamp: number,
+    duration: number,
+    args?: Record<string, unknown>
+  ) {
     this.addTrace(name, timestamp, duration, THREAD_RENDER, args)
   }
 
-  private static addTrace(name: string, timestamp: number, duration: number, thread: number, args?: Record<string, unknown>) {
+  private static addTrace(
+    name: string,
+    timestamp: number,
+    duration: number,
+    thread: number,
+    args?: Record<string, unknown>
+  ) {
     if (this._enabled) {
       // @ts-ignore
       this.trace.traceEvents.push({
@@ -57,7 +73,7 @@ export class Tracing {
           pid: 0,
           tid: THREAD_RENDER,
           args: { name: 'Render phase' },
-        }
+        },
       ],
     }
 
