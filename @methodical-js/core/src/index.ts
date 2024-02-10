@@ -7,6 +7,8 @@ export { WorkingNode } from './WorkingNode.js'
 export { ViewNode } from './ViewNode.js'
 export { RememberNode } from './RememberNode.js'
 export { EffectNode } from './EffectNode.js'
+export { EventNode } from './EventNode.js'
+export { EventNodeManager } from './EventNodeManager.js'
 export { ViewNodeManager } from './ViewNodeManager.js'
 
 export const remember = <T>(value: T) => {
