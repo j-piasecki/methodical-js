@@ -1,4 +1,9 @@
+import { BaseConfig, createBoundary } from '@methodical-js/core'
 import Methodical, { remember, Div, on } from '@methodical-js/web'
+
+const Test = createBoundary((config: BaseConfig, test: string) => {
+  console.log('Test', test)
+})
 
 Div(
   {
@@ -35,6 +40,8 @@ Div(
               innerBackgroundColor.value = 'red'
             }
           })
+
+          Test({ id: 'test6' }, 'napis')
         })
       }
     })
