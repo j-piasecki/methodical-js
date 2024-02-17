@@ -65,7 +65,7 @@ export class SuspendNode<T> extends WorkingNode {
     while (parent !== undefined) {
       if (parent instanceof SuspenseBoundaryNode) {
         if (parent.hasData(this.suspensionPath)) {
-          const data = parent.getData(this.suspensionPath, false)
+          const data = parent.getData(this.suspensionPath)
           this.value = data.value as T
           this.dependencies = data.dependencies
           return true
