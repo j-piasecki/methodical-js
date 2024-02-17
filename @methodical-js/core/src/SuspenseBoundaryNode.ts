@@ -35,15 +35,14 @@ export class SuspenseBoundaryNode extends ViewNode {
 
           this.children = []
           this.body = this.fallbackFun
-          this.fallbackFun?.()
+          WorkingTree.withContext(this, this.fallbackFun)
 
           error.then((data: unknown) => {
             this.loadedData[path] = { value: data, dependencies }
             delete this.thenables[path]
             this.body = this.bodyFun
 
-            // we need to queue the update on the parent, so this node does not become RebuildingNode
-            WorkingTree.queueUpdate(this.parent!)
+            WorkingTree.queueUpdate(this)
           })
         } else {
           throw error
@@ -74,7 +73,7 @@ export class SuspenseBoundaryNode extends ViewNode {
     return path in this.loadedData
   }
 
-  public getData(path: string) {
+  public getData(path: string): LoadedData | undefined {
     return this.loadedData[path]
   }
 
