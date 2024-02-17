@@ -9,12 +9,17 @@ interface Thenable {
   ) => unknown
 }
 
+interface LoadedData {
+  value: unknown
+  dependencies: unknown[]
+}
+
 export class SuspenseBoundaryNode extends ViewNode {
   private bodyFun?: () => void
   private fallbackFun?: () => void
 
   private thenables: Record<string, Thenable> = {}
-  private loadedData: Record<string, { value: unknown; dependencies: unknown[] }> = {}
+  private loadedData: Record<string, LoadedData> = {}
 
   constructor(id: string | number, config: BaseConfig, body?: () => void, fallback?: () => void) {
     super(id, config, undefined)
