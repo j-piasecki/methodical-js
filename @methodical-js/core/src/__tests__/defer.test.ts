@@ -1,4 +1,4 @@
-import { SuspenseBoundary, WorkingTree, remember, sideEffect, suspend } from '../index'
+import { SuspenseBoundary, WorkingTree, remember, sideEffect, defer } from '../index'
 import { createViewFunction, createViewManager } from './utils'
 
 jest.useFakeTimers()
@@ -19,7 +19,7 @@ class PromiseMock {
   }
 }
 
-test('fallback should be rendered after suspension', () => {
+test('fallback should be rendered after suspension when defer has no initial value', () => {
   const viewManager = createViewManager({})
   const View = createViewFunction(viewManager)
 
@@ -30,7 +30,7 @@ test('fallback should be rendered after suspension', () => {
       { id: 'suspense' },
       () => {
         // @ts-ignore pass mocked promise to have more control over it
-        suspend(() => new PromiseMock())
+        defer(() => new PromiseMock())
       },
       fallback
     )
@@ -41,7 +41,7 @@ test('fallback should be rendered after suspension', () => {
   expect(fallback).toHaveBeenCalled()
 })
 
-test('suspension should stop execution', () => {
+test('defer suspension should stop execution', () => {
   const viewManager = createViewManager({})
   const View = createViewFunction(viewManager)
 
@@ -50,7 +50,7 @@ test('suspension should stop execution', () => {
   View({ id: 'test' }, () => {
     SuspenseBoundary({ id: 'suspense' }, () => {
       // @ts-ignore pass mocked promise to have more control over it
-      suspend(() => new PromiseMock())
+      defer(() => new PromiseMock())
 
       fun()
     })
@@ -61,7 +61,7 @@ test('suspension should stop execution', () => {
   expect(fun).not.toHaveBeenCalled()
 })
 
-test('the branch should be rerendered when suspension ends', () => {
+test('the branch should be rerendered when defer suspension ends', () => {
   const viewManager = createViewManager({})
   const View = createViewFunction(viewManager)
 
@@ -71,7 +71,7 @@ test('the branch should be rerendered when suspension ends', () => {
   View({ id: 'test' }, () => {
     SuspenseBoundary({ id: 'suspense' }, () => {
       // @ts-ignore pass mocked promise to have more control over it
-      suspend(() => promise)
+      defer(() => promise)
 
       fun()
     })
@@ -85,7 +85,7 @@ test('the branch should be rerendered when suspension ends', () => {
   expect(fun).toHaveBeenCalledTimes(1)
 })
 
-test('changing suspend dependency should suspend again', () => {
+test('changing defer dependency should not suspend again', () => {
   const viewManager = createViewManager({})
   const View = createViewFunction(viewManager)
 
@@ -99,7 +99,7 @@ test('changing suspend dependency should suspend again', () => {
       () => {
         const val = remember(0)
         // @ts-ignore pass mocked promise to have more control over it
-        const susVal = suspend(() => promise, val)
+        const susVal = defer(() => promise, val)
 
         sideEffect(() => {
           val.value = susVal as number
@@ -117,57 +117,18 @@ test('changing suspend dependency should suspend again', () => {
   promise.resolve(1)
   WorkingTree.performUpdate()
 
-  // sideEffect triggered, causing update which should suspend again
+  // sideEffect triggered, causing update which should not suspend again
   WorkingTree.performUpdate()
 
-  // unsuspend rendering
+  // perform update again to check if it does not suspend
   promise.resolve(1)
   WorkingTree.performUpdate()
 
-  expect(fun).toHaveBeenCalledTimes(2)
-  expect(fallback).toHaveBeenCalledTimes(2)
-})
-
-test('updating parent withoud changing suspend dependency should not suspend again', () => {
-  const viewManager = createViewManager({})
-  const View = createViewFunction(viewManager)
-
-  const fun = jest.fn()
-  const fallback = jest.fn()
-  const promise = new PromiseMock()
-
-  View({ id: 'test' }, () => {
-    SuspenseBoundary(
-      { id: 'suspense' },
-      () => {
-        const val = remember(0)
-        // @ts-ignore pass mocked promise to have more control over it
-        const susVal = suspend(() => promise)
-
-        sideEffect(() => {
-          val.value = susVal as number
-        }, susVal)
-
-        fun()
-      },
-      fallback
-    )
-  })
-
-  WorkingTree.performInitialRender()
-
-  // unsuspend rendering
-  promise.resolve(1)
-  WorkingTree.performUpdate()
-
-  // sideEffect triggered, causing update
-  WorkingTree.performUpdate()
-
-  expect(fun).toHaveBeenCalledTimes(2)
+  expect(fun).toHaveBeenCalledTimes(3)
   expect(fallback).toHaveBeenCalledTimes(1)
 })
 
-test('the branch should be rerendered when suspension ends with more than one suspend call', () => {
+test('the branch should be rerendered when defer suspension ends with more than one defer call', () => {
   const viewManager = createViewManager({})
   const View = createViewFunction(viewManager)
 
@@ -181,9 +142,9 @@ test('the branch should be rerendered when suspension ends with more than one su
       { id: 'suspense' },
       () => {
         // @ts-ignore pass mocked promise to have more control over it
-        suspend(() => promise1)
+        defer(() => promise1)
         // @ts-ignore pass mocked promise to have more control over it
-        suspend(() => promise2)
+        defer(() => promise2)
 
         fun()
       },

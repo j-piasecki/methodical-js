@@ -83,9 +83,15 @@ export class SuspenseBoundaryNode extends ViewNode {
     return path in this.loadedData
   }
 
-  public getAndRemoveData(path: string) {
+  public getData(path: string, remove = true) {
     const data = this.loadedData[path]
-    delete this.loadedData[path]
+    if (remove) {
+      delete this.loadedData[path]
+    }
     return data
+  }
+
+  public putData(path: string, data: LoadedData) {
+    this.loadedData[path] = data
   }
 }

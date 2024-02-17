@@ -7,4 +7,5 @@ export enum NodeType {
   Effect = 'Effect',
   Event = 'Event',
   Suspend = 'Suspend',
+  Defer = 'Defer',
 }

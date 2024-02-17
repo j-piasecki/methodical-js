@@ -1,4 +1,5 @@
 import { BaseConfig } from './BaseConfig.js'
+import { DeferNode } from './DeferNode.js'
 import { EffectNode, EffectType } from './EffectNode.js'
 import { EventNode } from './EventNode.js'
 import { EventNodeManager } from './EventNodeManager.js'
@@ -202,6 +203,25 @@ export class WorkingTree {
 
     const duration = performance.now() - startTime
     Tracing.traceBuild('create suspend node', startTime, duration)
+
+    return node
+  }
+
+  public static createDeferNode<T>(fun: () => Promise<T>, dependencies: unknown[]) {
+    const startTime = performance.now()
+
+    // effect may only be called inside view node
+    const currentView = WorkingTree.current as ViewNode
+    const node = new DeferNode(currentView._nextActionId++)
+
+    // TODO: this may break during rebuild, the parent may be dropped from the current tree, not sure though
+    node.parent = currentView
+    currentView.children.push(node)
+
+    node.initializeOrRestore(fun, dependencies)
+
+    const duration = performance.now() - startTime
+    Tracing.traceBuild('create defer node', startTime, duration)
 
     return node
   }

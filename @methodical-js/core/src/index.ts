@@ -37,6 +37,10 @@ export const suspend = <T>(fun: () => Promise<T>, ...dependencies: unknown[]) =>
   return WorkingTree.createSuspedNode(fun, dependencies).value
 }
 
+export const defer = <T>(fun: () => Promise<T>, ...dependencies: unknown[]) => {
+  return WorkingTree.createDeferNode(fun, dependencies).value
+}
+
 export const SuspenseBoundary = (config: BaseConfig, body?: () => void, fallback?: () => void) => {
   return WorkingTree.createSuspenseBoundaryNode(config, body, fallback)
 }
