@@ -1,4 +1,23 @@
 import Methodical, { remember, Div, on } from '@methodical-js/web'
+import { Tracing } from '@methodical-js/core'
+
+const saveTemplateAsFile = (filename: string, dataObjToWrite: any) => {
+  const blob = new Blob([JSON.stringify(dataObjToWrite)], { type: "text/json" });
+  const link = document.createElement("a");
+
+  link.download = filename;
+  link.href = window.URL.createObjectURL(blob);
+  link.dataset.downloadurl = ["text/json", link.download, link.href].join(":");
+
+  const evt = new MouseEvent("click", {
+      view: window,
+      bubbles: true,
+      cancelable: true,
+  });
+
+  link.dispatchEvent(evt);
+  link.remove()
+};
 
 Div(
   {
@@ -29,10 +48,18 @@ Div(
         }, () => {
           on('click', (e: any) => {
             e.stopPropagation()
-            if (innerBackgroundColor.value === 'red') {
-              innerBackgroundColor.value = 'magenta'
+            // if (innerBackgroundColor.value === 'red') {
+            //   innerBackgroundColor.value = 'magenta'
+            // } else {
+            //   innerBackgroundColor.value = 'red'
+            // }
+
+            if (Tracing.enabled) {
+              const trace = Tracing.stop()
+
+              saveTemplateAsFile("trace.json", trace)
             } else {
-              innerBackgroundColor.value = 'red'
+              Tracing.start()
             }
           })
         })
