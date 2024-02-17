@@ -1,25 +1,26 @@
 import { WorkingTree, ViewNode, ViewNodeManager } from '@methodical-js/core'
 import { ViewConfig } from './ViewConfig.js'
+import { findParentView } from './utils.js'
 
-interface DivConfig extends ViewConfig {
-  style?: Partial<CSSStyleDeclaration>
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+interface DivConfig extends ViewConfig {}
 
 const viewManager: ViewNodeManager = {
   createView(node: ViewNode) {
-    console.log('create', node.id)
-
     const view = document.createElement('div')
     view.id = node.id as string
 
     const config = node.config as DivConfig
 
+    if (config.className !== undefined) {
+      view.className = config.className
+    }
     if (config.style !== undefined) {
       Object.assign(view.style, config.style)
     }
 
     if (node.parent !== undefined) {
-      const parentView = (node.parent as ViewNode).viewReference as HTMLElement | undefined
+      const parentView = findParentView(node)
       parentView?.appendChild(view)
     }
 
@@ -27,8 +28,6 @@ const viewManager: ViewNodeManager = {
   },
 
   dropView(node: ViewNode) {
-    console.log('drop', node.id)
-
     const view = node.viewReference as HTMLElement | undefined
     view?.remove()
   },
@@ -39,11 +38,12 @@ const viewManager: ViewNodeManager = {
       return
     }
 
-    console.log('update', oldNode.id, newNode.id)
-
     const _oldConfig = oldNode.config as DivConfig
     const newConfig = newNode.config as DivConfig
 
+    if (_oldConfig.className !== newConfig.className) {
+      view.className = newConfig.className ?? ''
+    }
     if (newConfig.style !== undefined) {
       Object.assign(view.style, newConfig.style)
     }
