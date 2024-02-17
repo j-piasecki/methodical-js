@@ -6,4 +6,6 @@ export enum NodeType {
   Remember = 'Remember',
   Effect = 'Effect',
   Event = 'Event',
+  Suspend = 'Suspend',
+  Defer = 'Defer',
 }
