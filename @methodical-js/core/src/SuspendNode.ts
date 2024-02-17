@@ -6,8 +6,8 @@ import { compareDependencies } from './utils.js'
 export type SuspendFunction<T> = () => Promise<T>
 
 export class SuspendNode<T> extends WorkingNode {
-  private fun: SuspendFunction<T>
-  private dependencies: unknown[]
+  protected fun: SuspendFunction<T>
+  protected dependencies: unknown[]
 
   public value: T
 
@@ -27,13 +27,13 @@ export class SuspendNode<T> extends WorkingNode {
     return path.join('/')
   }
 
-  private initialize(fun: SuspendFunction<T>, dependencies: unknown[]) {
+  protected initialize(fun: SuspendFunction<T>, dependencies: unknown[]) {
     this.fun = fun
     this.dependencies = dependencies
     this.suspend()
   }
 
-  private restore(previous: SuspendNode<T>, fun: SuspendFunction<T>, dependencies: unknown[]) {
+  protected restore(previous: SuspendNode<T>, fun: SuspendFunction<T>, dependencies: unknown[]) {
     this.dependencies = dependencies
     const areDependenciesEqual = compareDependencies(previous.dependencies, dependencies)
 
@@ -48,7 +48,7 @@ export class SuspendNode<T> extends WorkingNode {
     }
   }
 
-  private suspend() {
+  protected suspend() {
     const promise = this.fun()
     // @ts-ignore we need to attach the path to the promise to be able to unsuspend the rendering
     promise._methodical_path = this.suspensionPath
@@ -57,7 +57,7 @@ export class SuspendNode<T> extends WorkingNode {
     throw promise
   }
 
-  private tryUnsuspend() {
+  protected tryUnsuspend() {
     let parent = this.parent
 
     while (parent !== undefined) {
