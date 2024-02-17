@@ -58,22 +58,33 @@ export class SuspendNode<T> extends WorkingNode {
   }
 
   protected tryUnsuspend() {
+    const boundary = this.findBoundary()
+
+    if (boundary !== undefined) {
+      const data = boundary.getData(this.suspensionPath)
+
+      if (data !== undefined) {
+        this.value = data.value as T
+        this.dependencies = data.dependencies
+        return true
+      }
+    }
+
+    return false
+  }
+
+  protected findBoundary() {
     let parent = this.parent
 
     while (parent !== undefined) {
       if (parent instanceof SuspenseBoundaryNode) {
-        if (parent.hasData(this.suspensionPath)) {
-          const data = parent.getData(this.suspensionPath)
-          this.value = data.value as T
-          this.dependencies = data.dependencies
-          return true
-        }
+        return parent
       }
 
       parent = parent.parent
     }
 
-    return false
+    return undefined
   }
 
   public initializeOrRestore(fun: SuspendFunction<T>, dependencies?: unknown[]) {
