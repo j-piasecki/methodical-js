@@ -54,6 +54,8 @@ export class SuspendNode<T> extends WorkingNode {
     promise._methodical_path = this.suspensionPath
     // @ts-ignore same with dependencies
     promise._methodical_dependencies = this.dependencies
+    // @ts-ignore mark this promise as blocking
+    promise._methodical_blockRender = true
     throw promise
   }
 

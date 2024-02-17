@@ -63,7 +63,16 @@ export class SuspenseBoundaryNode extends ViewNode {
       this.thenables = node.thenables
     }
 
-    if (Object.keys(this.thenables).length > 0) {
+    let isSuspended = false
+    for (const [_, thenable] of Object.entries(this.thenables)) {
+      // @ts-ignore we need to check if the promise is blocking the rendering
+      if (thenable['_methodical_blockRender'] === true) {
+        isSuspended = true
+        break
+      }
+    }
+
+    if (isSuspended) {
       this.body = this.fallbackFun
     } else {
       this.body = this.bodyFun
