@@ -7,6 +7,8 @@ import { RebuildingNode } from './RebuildingNode.js'
 import { RememberNode } from './RememberNode.js'
 import { Renderer } from './Renderer.js'
 import { RootNode } from './RootNode.js'
+import { SuspendNode } from './SuspendNode.js'
+import { SuspenseBoundaryNode } from './SuspenseBoundaryNode.js'
 import { Tracing } from './Tracing.js'
 import { ViewNode } from './ViewNode.js'
 import { ViewNodeManager } from './ViewNodeManager.js'
@@ -128,8 +130,8 @@ export class WorkingTree {
       view.predecessorNode === undefined ||
       !deepEqual(view.predecessorNode.config, view.config)
     ) {
-      if (body !== undefined) {
-        WorkingTree.withContext(view, body)
+      if (view.body !== undefined) {
+        WorkingTree.withContext(view, view.body)
       }
     } else {
       // TODO: this will break when the body function changes but the config stays the same, TBD whether this is a problem
@@ -150,6 +152,58 @@ export class WorkingTree {
     Tracing.traceBuild(config.id, startTime, duration)
 
     return view
+  }
+
+  public static createSuspenseBoundaryNode(
+    config: BaseConfig,
+    body?: () => void,
+    fallback?: () => void
+  ) {
+    const startTime = performance.now()
+
+    // remember may only be called inside view node
+    const currentView = WorkingTree.current as ViewNode
+    const node = new SuspenseBoundaryNode(config.id, config, body, fallback)
+
+    // TODO: this may break during rebuild, the parent may be dropped from the current tree, not sure though
+    node.parent = currentView
+
+    // propagate predecessor during rebuild, so that remembered values can be restored in children and for
+    // optimization purposes, so that we can skip updating the view if the config is the same and the view is pure
+    node.predecessorNode = node.findPredecessorNode()
+    node.tryRestore()
+    currentView.children.push(node)
+
+    if (node.body !== undefined) {
+      WorkingTree.withContext(node, node.body)
+    }
+
+    // we don't need to keep the reference to the predecessor after children are calculated
+    node.predecessorNode = undefined
+
+    const duration = performance.now() - startTime
+    Tracing.traceBuild(config.id, startTime, duration)
+
+    return node
+  }
+
+  public static createSuspedNode<T>(fun: () => Promise<T>, dependencies: unknown[]) {
+    const startTime = performance.now()
+
+    // effect may only be called inside view node
+    const currentView = WorkingTree.current as ViewNode
+    const node = new SuspendNode(currentView._nextActionId++)
+
+    // TODO: this may break during rebuild, the parent may be dropped from the current tree, not sure though
+    node.parent = currentView
+    currentView.children.push(node)
+
+    node.initializeOrRestore(fun, dependencies)
+
+    const duration = performance.now() - startTime
+    Tracing.traceBuild('create suspend node', startTime, duration)
+
+    return node
   }
 
   public static createEventNode<T, U>(

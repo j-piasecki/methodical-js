@@ -1,3 +1,4 @@
+import { BaseConfig } from './BaseConfig.js'
 import { EventNodeManager } from './EventNodeManager.js'
 import { WorkingTree } from './WorkingTree.js'
 
@@ -30,4 +31,12 @@ export const eventHandler = <T, U>(
   ...dependencies: unknown[]
 ) => {
   return WorkingTree.createEventNode(name, handler, eventManager, dependencies)
+}
+
+export const suspend = <T>(fun: () => Promise<T>, ...dependencies: unknown[]) => {
+  return WorkingTree.createSuspedNode(fun, dependencies).value
+}
+
+export const SuspenseBoundary = (config: BaseConfig, body?: () => void, fallback?: () => void) => {
+  return WorkingTree.createSuspenseBoundaryNode(config, body, fallback)
 }
