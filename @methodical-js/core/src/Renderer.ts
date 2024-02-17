@@ -1,5 +1,6 @@
 import { EventNode } from './EventNode.js'
 import { NodeType } from './NodeType.js'
+import { Tracing } from './Tracing.js'
 import { ViewNode } from './ViewNode.js'
 import { WorkingNode } from './WorkingNode.js'
 
@@ -12,7 +13,17 @@ function isEventNode(node: WorkingNode): node is EventNode<unknown, unknown> {
 }
 
 export class Renderer {
-  public diffSubtrees(oldRoot: ViewNode, newRoot: ViewNode) {
+  public renderUpdate(oldRoot: ViewNode, newRoot: ViewNode) {
+    // trace starts one microsecond before the actual render starts so the layout is correct
+    const startTime = performance.now() - 0.001
+
+    this.diffSubtrees(oldRoot, newRoot)
+
+    const duration = performance.now() - startTime
+    Tracing.traceRender('render', startTime, duration)
+  }
+
+  private diffSubtrees(oldRoot: ViewNode, newRoot: ViewNode) {
     // keep index of the last node that was found in both trees, as nodes can only be added or removed
     // they will be in the same order in the both trees, so we can start looking from there
     let lastFoundIndex = 0
@@ -71,6 +82,8 @@ export class Renderer {
   }
 
   private createView(node: ViewNode) {
+    const startTime = performance.now()
+
     node.viewManager?.createView(node)
 
     for (const child of node.children) {
@@ -80,9 +93,14 @@ export class Renderer {
         child.registerHandler()
       }
     }
+
+    const duration = performance.now() - startTime
+    Tracing.traceRender(`create ${node.config.id}`, startTime, duration)
   }
 
   private dropView(node: ViewNode) {
+    const startTime = performance.now()
+
     for (const child of node.children) {
       if (isViewNode(child)) {
         this.dropView(child)
@@ -92,9 +110,14 @@ export class Renderer {
     }
 
     node.viewManager?.dropView(node)
+
+    const duration = performance.now() - startTime
+    Tracing.traceRender(`drop ${node.config.id}`, startTime, duration)
   }
 
   private updateView(oldNode: ViewNode, node: ViewNode) {
+    const startTime = performance.now()
+
     // view reference should be kept between updates, I think this is resposibility of the framework
     node.viewReference = oldNode.viewReference
 
@@ -105,5 +128,8 @@ export class Renderer {
         child.updateHandler()
       }
     }
+
+    const duration = performance.now() - startTime
+    Tracing.traceRender(`update ${node.config.id}`, startTime, duration)
   }
 }

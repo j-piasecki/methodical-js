@@ -10,6 +10,8 @@ export { EffectNode } from './EffectNode.js'
 export { EventNode } from './EventNode.js'
 export { EventNodeManager } from './EventNodeManager.js'
 export { ViewNodeManager } from './ViewNodeManager.js'
+export { Tracing } from './Tracing.js'
+
 export { createBoundary } from './createBoundary.js'
 
 export const remember = <T>(value: T) => {
