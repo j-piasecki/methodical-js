@@ -54,7 +54,13 @@ export class WorkingTree {
   }
 
   public static queueUpdate(node: WorkingNode) {
-    this.updatePaths.addPath(node.path)
+    // in case of SuspenseBoundaryNode we need to queue the update on the parent, so it does not become RebuildingNode
+    if (node instanceof SuspenseBoundaryNode) {
+      this.updatePaths.addPath(node.parent!.path)
+    } else {
+      this.updatePaths.addPath(node.path)
+    }
+
     this.updateQueued = true
   }
 
