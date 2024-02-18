@@ -5,8 +5,8 @@ import { ViewNodeManager } from './ViewNodeManager.js'
 type BoundaryFunction = <C extends BaseConfig>(config: C, ...args: unknown[]) => void
 
 const viewManager: ViewNodeManager = {
-  createView(node) {
-    node.viewReference = node.id
+  createView(_node) {
+    // noop
   },
 
   dropView(_node) {
