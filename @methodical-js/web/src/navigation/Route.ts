@@ -1,41 +1,45 @@
 import { WorkingTree, ViewNode } from '@methodical-js/core'
 import { NavigationConfig, NavigationContainer, NavigationViewManager } from './common.js'
 
-export function pathMatchesLocation(path: string) {
+export function matchPathToLocation(path: string): Record<string, string> | undefined {
   const pattern = path.split('/').filter((part) => part !== '')
   const location = window.location.pathname.split('/').filter((part) => part !== '')
+  const params: Record<string, string> = {}
 
-  if (pattern.length > location.length) {
-    return false
+  console.log('try match', pattern, location)
+
+  if (pattern.length != location.length) {
+    return undefined
   }
 
   for (const part of pattern) {
     const locationPart = location.shift()
     if (locationPart === undefined) {
-      return false
+      return undefined
     }
 
     if (part.startsWith(':')) {
-      part.slice(1)
+      const paramName = part.slice(1)
+      params[paramName] = locationPart
       continue
     }
 
     if (part !== locationPart) {
-      return false
+      return undefined
     }
   }
 
-  return true
+  return params
 }
 
-export const Navigator = (path: string, body?: () => void) => {
-  const navigatorContainerConfig = {
-    __viewType: '#mth-nav-cnt',
-    id: '#mth-nav-cnt' + path.replace('/', '-'),
+export const Route = (path: string, body?: (params: { [key: string]: string }) => void) => {
+  const routeContainerConfig = {
+    __viewType: '#mth-nav-rt-cnt',
+    id: '#mth-nav-rt-cnt' + path.replace('/', '-'),
     pure: false,
   }
 
-  NavigationContainer(navigatorContainerConfig, () => {
+  NavigationContainer(routeContainerConfig, () => {
     let fullPath = path
     let currentNode = WorkingTree.current as ViewNode | undefined
     while (currentNode !== undefined) {
@@ -50,15 +54,20 @@ export const Navigator = (path: string, body?: () => void) => {
       currentNode = currentNode.parent as ViewNode | undefined
     }
 
-    if (pathMatchesLocation(fullPath)) {
-      const navigatorConfig: NavigationConfig = {
-        __viewType: '#mth-nav',
+    console.log(path, fullPath, window.location.pathname)
+
+    const match = matchPathToLocation(fullPath)
+    if (match !== undefined) {
+      const routeConfig: NavigationConfig = {
+        __viewType: '#mth-nav-rt',
         __path: path,
-        id: '#mth-nav' + path.replace('/', '-'),
+        id: '#mth-nav-rt' + path.replace('/', '-'),
         pure: false,
       }
 
-      WorkingTree.createViewNode(navigatorConfig, NavigationViewManager, body)
+      WorkingTree.createViewNode(routeConfig, NavigationViewManager, () => {
+        body?.(match)
+      })
     }
   })
 }
