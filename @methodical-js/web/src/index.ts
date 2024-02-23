@@ -20,5 +20,3 @@ export { remember, sideEffect, defer, suspend, SuspenseBoundary } from '@methodi
 export { on } from './on.js'
 export { Div } from './views/Div.js'
 export { Text } from './views/Text.js'
-
-export { Navigator } from './navigation/Navigator.js'
