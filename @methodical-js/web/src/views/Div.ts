@@ -1,6 +1,6 @@
 import { WorkingTree, ViewNode, ViewNodeManager } from '@methodical-js/core'
 import { ViewConfig } from './ViewConfig.js'
-import { findParentView } from './../utils.js'
+import { insertNodeViewIntoDOM } from './insertNodeViewIntoDOM.js'
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface DivConfig extends ViewConfig {}
@@ -19,12 +19,8 @@ const viewManager: ViewNodeManager = {
       Object.assign(view.style, config.style)
     }
 
-    if (node.parent !== undefined) {
-      const parentView = findParentView(node)
-      parentView?.appendChild(view)
-    }
-
     node.viewReference = view
+    insertNodeViewIntoDOM(node)
   },
 
   dropView(node: ViewNode) {
