@@ -141,6 +141,7 @@ export function insertNodeViewIntoDOM(node: ViewNode) {
 
   const parent = node.parent as ViewNode
 
+  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
   if (parent.__opt.created) {
     // when the parent has been created, nodes to the right will be uninitialized
     // so looking there would go through all the nodes and not find anything
