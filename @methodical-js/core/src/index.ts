@@ -2,6 +2,7 @@ import { BaseConfig } from './BaseConfig.js'
 import { EventNodeManager } from './EventNodeManager.js'
 import { WorkingTree } from './WorkingTree.js'
 
+export { NodeType } from './NodeType.js'
 export { WorkingTree } from './WorkingTree.js'
 export { BaseConfig } from './BaseConfig.js'
 export { WorkingNode } from './WorkingNode.js'

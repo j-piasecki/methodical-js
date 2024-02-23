@@ -15,6 +15,12 @@ export class ViewNode extends WorkingNode {
   public predecessorNode?: ViewNode
   public isRestored = false
 
+  // flags used to optimize rendering, should only be read by view managers
+  public __opt = {
+    created: false, // node was created in this render
+    updated: false, // node was updated in this render
+  }
+
   constructor(id: string | number, config: BaseConfig, body?: () => void) {
     super(id, NodeType.View)
     this.children = []

@@ -13,11 +13,20 @@ function isEventNode(node: WorkingNode): node is EventNode<unknown, unknown> {
 }
 
 export class Renderer {
+  private _nodesToCreate: ViewNode[]
+
   public renderUpdate(oldRoot: ViewNode, newRoot: ViewNode) {
     // trace starts one microsecond before the actual render starts so the layout is correct
     const startTime = performance.now() - 0.001
 
+    this._nodesToCreate = []
     this.diffSubtrees(oldRoot, newRoot)
+
+    // create the nodes that were not found in the old tree
+    // we do that after diffing the trees, so view references are propagated in the new tree
+    for (const node of this._nodesToCreate) {
+      this.createView(node)
+    }
 
     const duration = performance.now() - startTime
     Tracing.traceRender('render', startTime, duration)
@@ -60,7 +69,7 @@ export class Renderer {
       }
 
       if (!found) {
-        this.createView(newChild)
+        this._nodesToCreate.push(newChild)
       }
     }
 
@@ -84,6 +93,8 @@ export class Renderer {
   private createView(node: ViewNode) {
     const startTime = performance.now()
 
+    node.__opt.created = true
+    node.__opt.updated = false
     node.viewManager?.createView(node)
 
     for (const child of node.children) {
@@ -121,6 +132,8 @@ export class Renderer {
     // view reference should be kept between updates, I think this is resposibility of the framework
     node.viewReference = oldNode.viewReference
 
+    node.__opt.updated = true
+    node.__opt.created = false
     node.viewManager?.updateView(oldNode, node)
 
     for (const child of node.children) {
