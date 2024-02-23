@@ -1,5 +1,5 @@
 import { WorkingTree, ViewNode, ViewNodeManager, BaseConfig } from '@methodical-js/core'
-import { findParentView } from './utils.js'
+import { findParentView } from './../utils.js'
 
 interface TextConfig extends BaseConfig {
   value: string

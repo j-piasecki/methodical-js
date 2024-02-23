@@ -1,6 +1,6 @@
 import { WorkingTree, ViewNode, ViewNodeManager } from '@methodical-js/core'
 import { ViewConfig } from './ViewConfig.js'
-import { findParentView } from './utils.js'
+import { findParentView } from './../utils.js'
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface DivConfig extends ViewConfig {}

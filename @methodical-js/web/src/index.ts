@@ -18,5 +18,7 @@ export default Methodical
 
 export { remember, sideEffect, defer, suspend, SuspenseBoundary } from '@methodical-js/core'
 export { on } from './on.js'
-export { Div } from './Div.js'
-export { Text } from './Text.js'
+export { Div } from './views/Div.js'
+export { Text } from './views/Text.js'
+
+export { Navigator } from './navigation/Navigator.js'
