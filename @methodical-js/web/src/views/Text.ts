@@ -1,5 +1,5 @@
 import { WorkingTree, ViewNode, ViewNodeManager, BaseConfig } from '@methodical-js/core'
-import { findParentView } from './utils.js'
+import { insertNodeViewIntoDOM } from './insertNodeViewIntoDOM.js'
 
 interface TextConfig extends BaseConfig {
   value: string
@@ -8,14 +8,13 @@ interface TextConfig extends BaseConfig {
 const viewManager: ViewNodeManager = {
   createView(node: ViewNode) {
     const config = node.config as TextConfig
-    const view = document.createTextNode(config.value)
+    const textNode = document.createTextNode(config.value)
+    const view = document.createElement('span')
 
-    if (node.parent !== undefined) {
-      const parentView = findParentView(node)
-      parentView?.appendChild(view)
-    }
+    view.appendChild(textNode)
 
     node.viewReference = view
+    insertNodeViewIntoDOM(node)
   },
 
   dropView(node: ViewNode) {
@@ -24,8 +23,9 @@ const viewManager: ViewNodeManager = {
   },
 
   updateView(oldNode: ViewNode, newNode: ViewNode) {
-    const view = newNode.viewReference as Text | undefined
-    if (view === undefined) {
+    const view = newNode.viewReference as HTMLSpanElement | undefined
+    const textNode = view?.firstChild as Text | undefined
+    if (textNode === undefined) {
       return
     }
 
@@ -33,7 +33,7 @@ const viewManager: ViewNodeManager = {
     const newConfig = newNode.config as TextConfig
 
     if (newConfig.value !== oldConfig.value) {
-      view.data = newConfig.value
+      textNode.data = newConfig.value
     }
   },
 }

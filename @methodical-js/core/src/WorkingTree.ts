@@ -83,6 +83,8 @@ export class WorkingTree {
         const rebuildContext = new RebuildingNode(nodeToUpdate)
         // set previous context to the node that is being rebuilt so that remembered values can be restored
         rebuildContext.predecessorNode = nodeToUpdate
+        // set the parent reference, so tree traversal works correctly
+        rebuildContext.parent = nodeToUpdate.parent
 
         WorkingTree.withContext(rebuildContext, nodeToUpdate.body!)
 
@@ -104,8 +106,16 @@ export class WorkingTree {
 
   public static performInitialRender() {
     // should be called only once, after the initial tree is built
+
+    // mark the root node as created in case any view manager tries to copy the flags
+    WorkingTree.root.__opt.created = true
+
     // we diff the root node with an empty root node to render the initial tree
     this.renderer.renderUpdate(new RootNode(), WorkingTree.root)
+
+    // for the following renders we consider the root as updated in case any view manager tries to copy the flags
+    WorkingTree.root.__opt.created = false
+    WorkingTree.root.__opt.updated = true
   }
 
   public static setRootViewReference(viewReference: unknown) {
