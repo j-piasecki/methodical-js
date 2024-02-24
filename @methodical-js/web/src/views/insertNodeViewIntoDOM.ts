@@ -26,7 +26,7 @@ function findFirstViewReferenceInSubtree(node: ViewNode): ViewNode | undefined {
   for (const child of node.children) {
     if (isViewNode(child)) {
       const viewReference = findFirstViewReferenceInSubtree(child)
-      if (viewReference !== undefined) {
+      if (viewReference?.viewReference !== undefined) {
         return viewReference
       }
     }
@@ -65,7 +65,7 @@ function findSuccessorViewReferenceNode(
 
     if (isViewNode(child)) {
       const viewReference = findFirstViewReferenceInSubtree(child)
-      if (viewReference !== undefined) {
+      if (viewReference?.viewReference !== undefined) {
         return viewReference
       }
     }
@@ -82,7 +82,7 @@ function findLastViewReferenceInSubtree(node: ViewNode): ViewNode | undefined {
     const child = node.children[i]
     if (isViewNode(child)) {
       const viewReference = findLastViewReferenceInSubtree(child)
-      if (viewReference !== undefined) {
+      if (viewReference?.viewReference !== undefined) {
         return viewReference
       }
     }
@@ -115,7 +115,7 @@ function findPredecessorViewReferenceNode(
     const child = parent.children[i]
     if (isViewNode(child)) {
       const viewReference = findLastViewReferenceInSubtree(child)
-      if (viewReference !== undefined) {
+      if (viewReference?.viewReference !== undefined) {
         return viewReference
       }
     }
@@ -143,30 +143,29 @@ export function insertNodeViewIntoDOM(node: ViewNode) {
 
   // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
   if (parent.__opt.created) {
-    // when the parent has been created, nodes to the right will be uninitialized
-    // so looking there would go through all the nodes and not find anything
+    // when the parent has been created, there is high chance that the node
+    // should be inserted at the end of the children, so we should look for the
+    // predecessor and if it's the last child, we should append the node
     const leftSibling = findPredecessorViewReferenceNode(node, parentViewRefNode)
-    if (leftSibling !== undefined) {
+    if (leftSibling !== undefined && leftSibling.viewReference === parentViewRef.lastChild) {
       parentViewRef.append(node.viewReference as HTMLElement)
       return
     }
-  } else {
-    // parent.__opt.updated
-    // when the parent has been updated and we're adding a node to it, there is
-    // high chance that the node will be inserted somewhere in the middle of the
-    // children, so we should look for the successor that we can pass to the
-    // insertBefore function
-    const rightViewSibling = findSuccessorViewReferenceNode(node, parentViewRefNode)
-      ?.viewReference as HTMLElement | undefined
-    if (rightViewSibling !== undefined) {
-      parentViewRef.insertBefore(node.viewReference as HTMLElement, rightViewSibling)
-      return
-    }
+  }
+
+  // when the parent has been updated and we're adding a node to it, there is
+  // high chance that the node will be inserted somewhere in the middle of the
+  // children, so we should look for the successor that we can pass to the
+  // insertBefore function
+  const rightViewSibling = findSuccessorViewReferenceNode(node, parentViewRefNode)
+    ?.viewReference as HTMLElement | undefined
+  if (rightViewSibling !== undefined) {
+    parentViewRef.insertBefore(node.viewReference as HTMLElement, rightViewSibling)
+    return
   }
 
   // if no siblings are found, we should simply append the node to the parent
   // in case of update, this will be the case when the node is the last one, so it
   // has no successor
-  // in case of create, we should not reach this point
   parentViewRef.appendChild(node.viewReference as HTMLElement)
 }
