@@ -7,6 +7,12 @@ import {
 } from '@methodical-js/core'
 import { ViewConfig } from '../views/ViewConfig'
 
+export const NAVIGATION_AMBIENT_TYPE = '#mth-nav-amb'
+export const NAVIGATOR_TYPE = '#mth-nav'
+export const NAVIGATOR_CONTAINER_TYPE = '#mth-nav-cnt'
+export const ROUTE_TYPE = '#mth-nav-rt'
+export const ROUTE_CONTAINER_TYPE = '#mth-nav-rt-cnt'
+
 export interface NavigationConfig extends ViewConfig {
   __path: string
 }
