@@ -29,9 +29,11 @@ export function pathMatchesLocation(path: string) {
 }
 
 export const Navigator = (path: string, body?: () => void) => {
+  const slashlessPath = path.replace('/', '-')
+
   const navigatorContainerConfig = {
     __viewType: '#mth-nav-cnt',
-    id: '#mth-nav-cnt' + path.replace('/', '-'),
+    id: '#mth-nav-cnt' + slashlessPath,
     pure: false,
   }
 
@@ -54,7 +56,7 @@ export const Navigator = (path: string, body?: () => void) => {
       const navigatorConfig: NavigationConfig = {
         __viewType: '#mth-nav',
         __path: path,
-        id: '#mth-nav' + path.replace('/', '-'),
+        id: '#mth-nav' + slashlessPath,
         pure: false,
       }
 

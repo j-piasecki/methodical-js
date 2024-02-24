@@ -6,8 +6,6 @@ export function matchPathToLocation(path: string): Record<string, string> | unde
   const location = window.location.pathname.split('/').filter((part) => part !== '')
   const params: Record<string, string> = {}
 
-  console.log('try match', pattern, location)
-
   if (pattern.length != location.length) {
     return undefined
   }
@@ -33,9 +31,11 @@ export function matchPathToLocation(path: string): Record<string, string> | unde
 }
 
 export const Route = (path: string, body?: (params: { [key: string]: string }) => void) => {
+  const slashlessPath = path.replace('/', '-')
+
   const routeContainerConfig = {
     __viewType: '#mth-nav-rt-cnt',
-    id: '#mth-nav-rt-cnt' + path.replace('/', '-'),
+    id: '#mth-nav-rt-cnt' + slashlessPath,
     pure: false,
   }
 
@@ -54,14 +54,12 @@ export const Route = (path: string, body?: (params: { [key: string]: string }) =
       currentNode = currentNode.parent as ViewNode | undefined
     }
 
-    console.log(path, fullPath, window.location.pathname)
-
     const match = matchPathToLocation(fullPath)
     if (match !== undefined) {
       const routeConfig: NavigationConfig = {
         __viewType: '#mth-nav-rt',
         __path: path,
-        id: '#mth-nav-rt' + path.replace('/', '-'),
+        id: '#mth-nav-rt' + slashlessPath,
         pure: false,
       }
 
