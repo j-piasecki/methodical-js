@@ -37,14 +37,13 @@ const AmbientViewManager: ViewNodeManager = {
   },
 }
 
-interface Ambient<T> {
+export interface Ambient<T> {
   key: string
   (config: AmbientConfig<T>, body: () => void): ViewNode
 }
 
 function AmbientFunction<T>(config: AmbientConfig<T>, body: () => void) {
   config.__ambient = true
-  config.pure = true
 
   // we do this during the tree calculation to make sure that reading in the
   // same render cycle is possible
