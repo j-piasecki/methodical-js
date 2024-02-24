@@ -141,7 +141,6 @@ export function insertNodeViewIntoDOM(node: ViewNode) {
 
   const parent = node.parent as ViewNode
 
-  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
   if (parent.__opt.created) {
     // when the parent has been created, there is high chance that the node
     // should be inserted at the end of the children, so we should look for the
