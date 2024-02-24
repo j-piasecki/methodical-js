@@ -1,4 +1,10 @@
-import { ViewNode, ViewNodeManager, WorkingTree, createBoundary } from '@methodical-js/core'
+import {
+  ViewNode,
+  ViewNodeManager,
+  WorkingTree,
+  createAmbient,
+  createBoundary,
+} from '@methodical-js/core'
 import { ViewConfig } from '../views/ViewConfig'
 
 export interface NavigationConfig extends ViewConfig {
@@ -34,3 +40,35 @@ export const NavigationViewManager: ViewNodeManager = {
 export const NavigationContainer = createBoundary((config: unknown, body: () => void) => {
   body()
 })
+
+export function pathMatchesLocation(path: string, exact = false) {
+  const pattern = path.split('/').filter((part) => part !== '')
+  const location = window.location.pathname.split('/').filter((part) => part !== '')
+
+  if (
+    (!exact && pattern.length > location.length) ||
+    (exact && pattern.length != location.length)
+  ) {
+    return false
+  }
+
+  for (const part of pattern) {
+    const locationPart = location.shift()
+    if (locationPart === undefined) {
+      return false
+    }
+
+    if (part.startsWith(':')) {
+      part.slice(1)
+      continue
+    }
+
+    if (part !== locationPart) {
+      return false
+    }
+  }
+
+  return true
+}
+
+export const NavigationAmbient = createAmbient<string>('#mth-nav-amb')

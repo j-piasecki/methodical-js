@@ -1,32 +1,11 @@
 import { WorkingTree, ViewNode } from '@methodical-js/core'
-import { NavigationConfig, NavigationContainer, NavigationViewManager } from './common.js'
-
-export function pathMatchesLocation(path: string) {
-  const pattern = path.split('/').filter((part) => part !== '')
-  const location = window.location.pathname.split('/').filter((part) => part !== '')
-
-  if (pattern.length > location.length) {
-    return false
-  }
-
-  for (const part of pattern) {
-    const locationPart = location.shift()
-    if (locationPart === undefined) {
-      return false
-    }
-
-    if (part.startsWith(':')) {
-      part.slice(1)
-      continue
-    }
-
-    if (part !== locationPart) {
-      return false
-    }
-  }
-
-  return true
-}
+import {
+  NavigationConfig,
+  NavigationContainer,
+  NavigationViewManager,
+  pathMatchesLocation,
+} from './common.js'
+import { NavigationAmbient } from './common.js'
 
 export const Navigator = (path: string, body?: () => void) => {
   const slashlessPath = path.replace('/', '-')
@@ -60,7 +39,15 @@ export const Navigator = (path: string, body?: () => void) => {
         pure: false,
       }
 
-      WorkingTree.createViewNode(navigatorConfig, NavigationViewManager, body)
+      NavigationAmbient(
+        {
+          id: '#mth-nav-amb' + slashlessPath,
+          value: fullPath,
+        },
+        () => {
+          WorkingTree.createViewNode(navigatorConfig, NavigationViewManager, body)
+        }
+      )
     }
   })
 }

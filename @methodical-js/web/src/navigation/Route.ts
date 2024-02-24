@@ -1,36 +1,13 @@
 import { WorkingTree, ViewNode } from '@methodical-js/core'
-import { NavigationConfig, NavigationContainer, NavigationViewManager } from './common.js'
+import {
+  NavigationAmbient,
+  NavigationConfig,
+  NavigationContainer,
+  NavigationViewManager,
+  pathMatchesLocation,
+} from './common.js'
 
-export function matchPathToLocation(path: string): Record<string, string> | undefined {
-  const pattern = path.split('/').filter((part) => part !== '')
-  const location = window.location.pathname.split('/').filter((part) => part !== '')
-  const params: Record<string, string> = {}
-
-  if (pattern.length != location.length) {
-    return undefined
-  }
-
-  for (const part of pattern) {
-    const locationPart = location.shift()
-    if (locationPart === undefined) {
-      return undefined
-    }
-
-    if (part.startsWith(':')) {
-      const paramName = part.slice(1)
-      params[paramName] = locationPart
-      continue
-    }
-
-    if (part !== locationPart) {
-      return undefined
-    }
-  }
-
-  return params
-}
-
-export const Route = (path: string, body?: (params: { [key: string]: string }) => void) => {
+export const Route = (path: string, body?: () => void) => {
   const slashlessPath = path.replace('/', '-')
 
   const routeContainerConfig = {
@@ -54,8 +31,7 @@ export const Route = (path: string, body?: (params: { [key: string]: string }) =
       currentNode = currentNode.parent as ViewNode | undefined
     }
 
-    const match = matchPathToLocation(fullPath)
-    if (match !== undefined) {
+    if (pathMatchesLocation(fullPath, true)) {
       const routeConfig: NavigationConfig = {
         __viewType: '#mth-nav-rt',
         __path: path,
@@ -63,9 +39,15 @@ export const Route = (path: string, body?: (params: { [key: string]: string }) =
         pure: false,
       }
 
-      WorkingTree.createViewNode(routeConfig, NavigationViewManager, () => {
-        body?.(match)
-      })
+      NavigationAmbient(
+        {
+          id: '#mth-nav-amb' + slashlessPath,
+          value: fullPath,
+        },
+        () => {
+          WorkingTree.createViewNode(routeConfig, NavigationViewManager, body)
+        }
+      )
     }
   })
 }
