@@ -64,11 +64,7 @@ export class WorkingTree {
     this.updateQueued = true
   }
 
-  public static performUpdate() {
-    if (!this.updateQueued) {
-      return
-    }
-
+  private static _performUpdateInternal() {
     // trace starts one microsecond before the actual render starts so the layout is correct
     const startTime = performance.now() - 0.001
 
@@ -102,6 +98,18 @@ export class WorkingTree {
 
     const duration = performance.now() - startTime
     Tracing.traceBuild('update', startTime, duration, { pathsToUpdate })
+  }
+
+  public static performUpdate() {
+    let updateCount = 0
+    while (this.updateQueued) {
+      this._performUpdateInternal()
+
+      if (updateCount++ > 128) {
+        console.error('Update loop limit reached, possible infinite loop detected.')
+        break
+      }
+    }
   }
 
   public static performInitialRender() {
