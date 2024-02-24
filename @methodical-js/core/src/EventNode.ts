@@ -21,8 +21,12 @@ export class EventNode<T, U> extends WorkingNode {
 
   private getEventTarget(): U {
     // event node may only be called inside view node
-    const parent = this.parent as ViewNode
-    // we want to attach the event handler to the view reference of the parent
+    let parent = this.parent as ViewNode
+    // we want to attach the event handler to the first ancestor with a view reference
+    while (parent.viewReference === undefined) {
+      parent = parent.parent as ViewNode
+    }
+
     return parent.viewReference as U
   }
 

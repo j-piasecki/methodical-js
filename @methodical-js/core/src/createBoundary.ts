@@ -3,7 +3,7 @@ import { WorkingTree } from './WorkingTree.js'
 import { ViewNodeManager } from './ViewNodeManager.js'
 import { ViewNode } from './ViewNode.js'
 
-type BoundaryFunction = <C extends BaseConfig>(config: C, ...args: unknown[]) => void
+type BoundaryFunction<C extends BaseConfig> = (config: C, ...args: unknown[]) => void
 
 const viewManager: ViewNodeManager = {
   createView(node) {
@@ -22,7 +22,7 @@ const viewManager: ViewNodeManager = {
   },
 }
 
-export function createBoundary<C extends BaseConfig>(target: BoundaryFunction) {
+export function createBoundary<C extends BaseConfig>(target: BoundaryFunction<C>) {
   return function (config: C, ...args: unknown[]) {
     const body = () => {
       target(config, ...args)
