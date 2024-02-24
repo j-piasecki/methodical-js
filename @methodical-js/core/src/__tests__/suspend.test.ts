@@ -94,16 +94,14 @@ test('changing suspend dependency should suspend again', () => {
   const promise = new PromiseMock()
 
   View({ id: 'test' }, () => {
+    const val = remember(0)
     SuspenseBoundary(
       { id: 'suspense' },
       () => {
-        const val = remember(0)
         // @ts-ignore pass mocked promise to have more control over it
-        const susVal = suspend(() => promise, val)
+        const susVal = suspend(() => promise, val.value)
 
-        sideEffect(() => {
-          val.value = susVal as number
-        }, susVal)
+        val.value = susVal as number
 
         fun()
       },
@@ -115,9 +113,6 @@ test('changing suspend dependency should suspend again', () => {
 
   // unsuspend rendering
   promise.resolve(1)
-  WorkingTree.performUpdate()
-
-  // sideEffect triggered, causing update which should suspend again
   WorkingTree.performUpdate()
 
   // unsuspend rendering
