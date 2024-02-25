@@ -3,6 +3,7 @@ import { ViewNode } from './ViewNode.js'
 import { ViewNodeManager } from './ViewNodeManager.js'
 import { WorkingTree } from './WorkingTree.js'
 import { remember, sideEffect } from './effects.js'
+import { deepEqual } from './utils.js'
 
 export interface AmbientConfig<T> extends BaseConfig {
   value: T
@@ -67,8 +68,10 @@ function AmbientFunction<T>(config: AmbientConfig<T>, body: () => void) {
         currentNode.subscribers = oldNode.subscribers
         currentNode.subscribe = oldNode.subscribe
 
-        for (const subscriber of currentNode.subscribers) {
-          subscriber(config.value)
+        if (!deepEqual(oldNode.config.value, config.value)) {
+          for (const subscriber of currentNode.subscribers) {
+            subscriber(config.value)
+          }
         }
       }
     }

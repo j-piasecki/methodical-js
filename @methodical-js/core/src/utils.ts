@@ -1,5 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function deepEqual(obj1: Record<string, any>, obj2: Record<string, any>) {
+export function deepEqual(obj1: any, obj2: any) {
   if (obj1 === obj2) {
     // it's just the same object. No need to compare.
     return true
