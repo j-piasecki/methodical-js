@@ -1,6 +1,16 @@
 import { BaseConfig, SuspenseBoundary, createBoundary, defer, suspend } from '@methodical-js/core'
-import Methodical, { remember, Div, on, Text } from '@methodical-js/web'
+import Methodical, {
+  remember,
+  Div,
+  on,
+  Text,
+  Navigator,
+  Route,
+  getNavigation,
+} from '@methodical-js/web'
 import { Tracing } from '@methodical-js/core'
+import { Home } from './home'
+import { Suspense } from './suspense'
 
 const saveTemplateAsFile = (filename: string, dataObjToWrite: any) => {
   const blob = new Blob([JSON.stringify(dataObjToWrite)], { type: 'text/json' })
@@ -20,238 +30,91 @@ const saveTemplateAsFile = (filename: string, dataObjToWrite: any) => {
   link.remove()
 }
 
-const Test = createBoundary((config: BaseConfig, test: string) => {
-  console.log('Test', test)
-})
+const TracingButton = createBoundary(() => {
+  const tracingEnabled = remember(false)
 
-function Squares() {
   Div(
     {
-      id: 'test',
-      style: { width: '500px', height: '500px', backgroundColor: 'red' },
-    },
-    () => {
-      const backgroundColor = remember('blue')
-      const innerBackgroundColor = remember('red')
-
-      Text({ id: 'text', value: backgroundColor.value })
-      Div(
-        {
-          id: 'test2',
-          style: { width: '300px', height: '300px', backgroundColor: backgroundColor.value },
-        },
-        () => {
-          const bg = backgroundColor.value
-          on(
-            'click',
-            () => {
-              if (bg === 'blue') {
-                backgroundColor.value = 'green'
-              } else {
-                backgroundColor.value = 'blue'
-              }
-            },
-            bg
-          )
-
-          if (backgroundColor.value === 'blue') {
-            Div(
-              {
-                id: 'test5',
-                style: {
-                  width: '100px',
-                  height: '100px',
-                  backgroundColor: innerBackgroundColor.value,
-                },
-              },
-              () => {
-                on('click', (e: any) => {
-                  e.stopPropagation()
-                  // if (innerBackgroundColor.value === 'red') {
-                  //   innerBackgroundColor.value = 'magenta'
-                  // } else {
-                  //   innerBackgroundColor.value = 'red'
-                  // }
-
-                  if (Tracing.enabled) {
-                    const trace = Tracing.stop()
-
-                    saveTemplateAsFile('trace.json', trace)
-                  } else {
-                    Tracing.start()
-                  }
-                })
-
-                Test({ id: 'test6' }, 'napis')
-              }
-            )
-          }
-        }
-      )
-
-      Div(
-        {
-          id: 'test3',
-          style: { width: '200px', height: '200px', backgroundColor: 'magenta' },
-          pure: true,
-        },
-        () => {
-          console.log('test3 execute')
-          Div(
-            {
-              id: 'test4',
-              style: { width: '100px', height: '100px', backgroundColor: 'yellow' },
-            },
-            () => {
-              console.log('test4 execute')
-            }
-          )
-        }
-      )
-    }
-  )
-}
-
-let suspenseCounter = 0
-let deferCounter = 0
-
-function fetchSuspend() {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(suspenseCounter++)
-    }, 2000)
-  })
-}
-
-function fetchDefer() {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(deferCounter++)
-    }, 2000)
-  })
-}
-
-function SuspendTest() {
-  Div(
-    {
-      id: 'root',
+      id: 'tracing-button',
       style: {
-        width: '1200px',
-        height: '500px',
-      },
-    },
-    () => {
-      Div(
-        {
-          id: 'suspendcontainer',
-          style: {
-            width: '1200px',
-            height: '250px',
-            backgroundColor: 'yellow',
-          },
-        },
-        () => {
-          const dataId = remember(0)
-          SuspenseBoundary(
-            { id: 'suspense' },
-            () => {
-              const value = suspend(fetchSuspend, dataId.value)
-              Text({ id: 'value', value: `currentValue: ${value}` })
-
-              Div(
-                {
-                  id: 'button',
-                  style: {
-                    width: '100px',
-                    height: '50px',
-                    backgroundColor: 'red',
-                  },
-                },
-                () => {
-                  on('click', () => {
-                    dataId.value++
-                  })
-
-                  Text({ id: 'text', value: 'fetch next' })
-                }
-              )
-            },
-            () => {
-              Text({ id: 'fallback', value: 'Suspended' })
-            }
-          )
-        }
-      )
-
-      Div(
-        {
-          id: 'defercontainer',
-          style: {
-            width: '1200px',
-            height: '250px',
-            backgroundColor: 'yellow',
-          },
-        },
-        () => {
-          SuspenseBoundary(
-            { id: 'suspense' },
-            () => {
-              const dataId = remember(0)
-              const value = defer(fetchDefer, dataId.value)
-              Text({ id: 'value', value: `currentValue: ${value}` })
-              Div(
-                {
-                  id: 'button',
-                  style: {
-                    width: '100px',
-                    height: '50px',
-                    backgroundColor: 'red',
-                  },
-                },
-                () => {
-                  on('click', () => {
-                    dataId.value++
-                  })
-                  Text({ id: 'text', value: 'fetch next' })
-                }
-              )
-            },
-            () => {
-              Text({ id: 'fallback', value: 'Suspended' })
-            }
-          )
-        }
-      )
-    }
-  )
-}
-
-Div({ id: 'app' }, () => {
-  const showSquares = remember(true)
-
-  Div(
-    {
-      id: 'switcher',
-      style: {
-        width: '100px',
-        height: '50px',
-        backgroundColor: 'blue',
+        width: '100%',
+        padding: '8px',
+        marginBottom: '8px',
+        backgroundColor: tracingEnabled.value ? '#d00' : '#0d0',
+        borderRadius: '8px',
+        boxSizing: 'border-box',
       },
     },
     () => {
       on('click', () => {
-        showSquares.value = !showSquares.value
+        tracingEnabled.value = !Tracing.enabled
+
+        if (Tracing.enabled) {
+          const trace = Tracing.stop()
+          saveTemplateAsFile('trace.json', trace)
+        } else {
+          Tracing.start()
+        }
       })
 
-      Text({ id: 'text', value: 'Show the other thing' })
+      Text({ id: 'text', value: tracingEnabled.value ? 'Stop Tracing' : 'Start Tracing' })
+    }
+  )
+})
+
+interface ButtonConfig extends BaseConfig {
+  text: string
+  onClick: () => void
+}
+
+const NavButton = createBoundary((config: ButtonConfig) => {
+  Div(
+    {
+      id: 'button',
+      style: {
+        width: '100%',
+        padding: '8px',
+        marginBottom: '8px',
+        backgroundColor: '#ddd',
+        borderRadius: '8px',
+        boxSizing: 'border-box',
+      },
+    },
+    () => {
+      on('click', config.onClick)
+      Text({ id: 'text', value: config.text })
+    }
+  )
+})
+
+Div({ id: 'root', style: { display: 'flex', flexDirection: 'row' } }, () => {
+  const navigation = getNavigation()
+
+  Div(
+    {
+      id: 'navbar',
+      style: {
+        width: '200px',
+        padding: '8px',
+      },
+    },
+    () => {
+      TracingButton({ id: 'tracing' })
+      NavButton({ id: 'home', text: 'Home', onClick: () => navigation.navigate('/') })
+      NavButton({
+        id: 'suspense',
+        text: 'Suspense',
+        onClick: () => navigation.navigate('/suspense'),
+      })
     }
   )
 
-  if (showSquares.value) {
-    Squares()
-  } else {
-    SuspendTest()
-  }
+  Div({ id: 'content', style: { flexGrow: '1' } }, () => {
+    Navigator('/', () => {
+      Route('/', Home)
+      Route('/suspense', Suspense)
+    })
+  })
 })
 
 Methodical.init(document.getElementById('app')!)

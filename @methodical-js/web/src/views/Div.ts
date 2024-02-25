@@ -8,7 +8,6 @@ interface DivConfig extends ViewConfig {}
 const viewManager: ViewNodeManager = {
   createView(node: ViewNode) {
     const view = document.createElement('div')
-    view.id = node.id as string
 
     const config = node.config as DivConfig
 
