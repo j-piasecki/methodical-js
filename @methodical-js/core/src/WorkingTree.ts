@@ -144,7 +144,6 @@ export class WorkingTree {
     const view = new ViewNode(config.id, config, body)
     view.viewManager = ViewNodeManager
 
-    // TODO: this may break during rebuild, the parent may be dropped from the current tree, not sure though
     view.parent = currentView
 
     // propagate predecessor during rebuild, so that remembered values can be restored in children and for
@@ -206,7 +205,6 @@ export class WorkingTree {
     const currentView = WorkingTree.current as ViewNode
     const node = new SuspenseBoundaryNode(config.id, config, body, fallback)
 
-    // TODO: this may break during rebuild, the parent may be dropped from the current tree, not sure though
     node.parent = currentView
 
     // propagate predecessor during rebuild, so that remembered values can be restored in children and for
@@ -235,7 +233,6 @@ export class WorkingTree {
     const currentView = WorkingTree.current as ViewNode
     const node = new SuspendNode(currentView._nextActionId++)
 
-    // TODO: this may break during rebuild, the parent may be dropped from the current tree, not sure though
     node.parent = currentView
     currentView.children.push(node)
 
@@ -254,7 +251,6 @@ export class WorkingTree {
     const currentView = WorkingTree.current as ViewNode
     const node = new DeferNode(currentView._nextActionId++)
 
-    // TODO: this may break during rebuild, the parent may be dropped from the current tree, not sure though
     node.parent = currentView
     currentView.children.push(node)
 
@@ -279,7 +275,6 @@ export class WorkingTree {
     const node = new EventNode(currentView._nextActionId++, name)
     node.eventManager = eventManager
 
-    // TODO: this may break during rebuild, the parent may be dropped from the current tree, not sure though
     node.parent = currentView
     currentView.children.push(node)
 
@@ -298,7 +293,6 @@ export class WorkingTree {
     const currentView = WorkingTree.current as ViewNode
     const node = new RememberNode<T>(currentView._nextActionId++)
 
-    // TODO: this may break during rebuild, the parent may be dropped from the current tree, not sure though
     node.parent = currentView
     currentView.children.push(node)
 
@@ -317,7 +311,6 @@ export class WorkingTree {
     const currentView = WorkingTree.current as ViewNode
     const node = new EffectNode(currentView._nextActionId++)
 
-    // TODO: this may break during rebuild, the parent may be dropped from the current tree, not sure though
     node.parent = currentView
     currentView.children.push(node)
 
