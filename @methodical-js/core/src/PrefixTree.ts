@@ -72,11 +72,48 @@ export class PrefixTree {
     return result
   }
 
+  public findNodeAtPath(path: Id[]): PrefixTree | undefined {
+    let currentNode = this.root
+
+    // skip first element, it's the root
+    for (let i = 1; i < path.length; i++) {
+      const key = path[i]
+      if (currentNode === undefined) {
+        return undefined
+      }
+
+      currentNode = currentNode.children.get(key)
+    }
+
+    if (currentNode === undefined) {
+      return undefined
+    }
+
+    const tree = new PrefixTree()
+    tree.root = { ...currentNode, last: false }
+
+    return tree
+  }
+
   public clear() {
     this.root = undefined
   }
 
   public isEmpty() {
     return this.root === undefined
+  }
+
+  public toString() {
+    return JSON.stringify(
+      this.root,
+      (key, value) => {
+        if (key === 'children') {
+          return Object.fromEntries(value.entries())
+        }
+
+        return value
+      },
+      2
+    )
   }
 }

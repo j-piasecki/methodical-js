@@ -210,3 +210,36 @@ test('predecessorNode should be undefined on every node when update is finished'
 
   checkpredecessorNode(WorkingTree.root)
 })
+
+test('pure view should not stop its descendants from being updated if queued for it', () => {
+  const viewManager = createViewManager({ createView: jest.fn(), updateView: jest.fn() })
+  const View = createViewFunction(viewManager)
+
+  const innerFunction = jest.fn()
+  const moreInnerFunction = jest.fn()
+  const mostInnerFunction = jest.fn()
+  let test3
+
+  const test = View({ id: 'test' }, () => {
+    innerFunction()
+    View({ id: 'test2', pure: true }, () => {
+      moreInnerFunction()
+      test3 = View({ id: 'test3' }, mostInnerFunction)
+    })
+  })
+
+  WorkingTree.performInitialRender()
+
+  expect(innerFunction).toHaveBeenCalledTimes(1)
+  expect(moreInnerFunction).toHaveBeenCalledTimes(1)
+  expect(mostInnerFunction).toHaveBeenCalledTimes(1)
+
+  WorkingTree.queueUpdate(test)
+  WorkingTree.queueUpdate(test3!)
+
+  WorkingTree.performUpdate()
+
+  expect(innerFunction).toHaveBeenCalledTimes(2)
+  expect(moreInnerFunction).toHaveBeenCalledTimes(1)
+  expect(mostInnerFunction).toHaveBeenCalledTimes(2)
+})

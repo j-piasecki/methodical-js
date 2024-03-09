@@ -20,7 +20,8 @@ export class WorkingTree {
   private static _root: RootNode = new RootNode()
   private static _current: WorkingNode = WorkingTree._root
 
-  private static updatePaths = new PrefixTree()
+  private static currentUpdatePaths = new PrefixTree()
+  private static queuedUpdatePaths = new PrefixTree()
   private static updateQueued = false
 
   private static renderer = new Renderer()
@@ -40,7 +41,7 @@ export class WorkingTree {
   public static reset() {
     WorkingTree._root = new RootNode()
     WorkingTree._current = WorkingTree._root
-    this.updatePaths = new PrefixTree()
+    this.queuedUpdatePaths = new PrefixTree()
     this.updateQueued = false
   }
 
@@ -56,9 +57,9 @@ export class WorkingTree {
   public static queueUpdate(node: WorkingNode) {
     // in case of SuspenseBoundaryNode we need to queue the update on the parent, so it does not become RebuildingNode
     if (node instanceof SuspenseBoundaryNode) {
-      this.updatePaths.addPath(node.parent!.path)
+      this.queuedUpdatePaths.addPath(node.parent!.path)
     } else {
-      this.updatePaths.addPath(node.path)
+      this.queuedUpdatePaths.addPath(node.path)
     }
 
     this.updateQueued = true
@@ -68,8 +69,9 @@ export class WorkingTree {
     // trace starts one microsecond before the actual render starts so the layout is correct
     const startTime = performance.now() - 0.001
 
-    const pathsToUpdate = this.updatePaths.getPaths()
-    this.updatePaths.clear()
+    const pathsToUpdate = this.queuedUpdatePaths.getPaths()
+    this.currentUpdatePaths = this.queuedUpdatePaths
+    this.queuedUpdatePaths = new PrefixTree()
     this.updateQueued = false
 
     for (const path of pathsToUpdate) {
@@ -166,8 +168,22 @@ export class WorkingTree {
         child.parent = view
       }
 
-      // if the config stays the same, we can skip updating the view
-      view.isRestored = true
+      // if there was an update requested on one of the descendants, we need to queue the update on that view
+      // since pure component breaks rendering here
+      const childUpdatePaths = this.currentUpdatePaths.findNodeAtPath(view.path)
+      if (childUpdatePaths !== undefined) {
+        const updatedChildren = childUpdatePaths
+          .getPaths()
+          .map((path) => view.getNodeFromPath(path))
+          .filter((node) => node !== undefined)
+
+        for (const child of updatedChildren) {
+          this.queueUpdate(child!)
+        }
+      } else {
+        // if the config stays the same and no children were updated directly, we can skip updating the view
+        view.isRestored = true
+      }
     }
 
     // we don't need to keep the reference to the predecessor after children are calculated
