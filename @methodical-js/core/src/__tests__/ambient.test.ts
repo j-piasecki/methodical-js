@@ -1,12 +1,4 @@
-import {
-  ViewNode,
-  WorkingNode,
-  WorkingTree,
-  createAmbient,
-  readAmbient,
-  remember,
-  sideEffect,
-} from '../index'
+import { WorkingTree, createAmbient, readAmbient, remember, sideEffect } from '../index'
 import { createViewFunction, createViewManager } from './utils'
 
 jest.useFakeTimers()
