@@ -66,9 +66,6 @@ export class WorkingTree {
   }
 
   private static _performUpdateInternal() {
-    // trace starts one microsecond before the actual render starts so the layout is correct
-    const startTime = performance.now() - 0.001
-
     const pathsToUpdate = this.queuedUpdatePaths.getPaths()
     this.currentUpdatePaths = this.queuedUpdatePaths
     this.queuedUpdatePaths = new PrefixTree()
@@ -97,12 +94,12 @@ export class WorkingTree {
         }
       }
     }
-
-    const duration = performance.now() - startTime
-    Tracing.traceBuild('update', startTime, duration, { pathsToUpdate })
   }
 
   public static performUpdate() {
+    // trace starts one microsecond before the actual render starts so the layout is correct
+    const startTime = performance.now() - 0.001
+
     let updateCount = 0
     while (this.updateQueued) {
       this._performUpdateInternal()
@@ -112,6 +109,9 @@ export class WorkingTree {
         break
       }
     }
+
+    const duration = performance.now() - startTime
+    Tracing.traceBuild('update', startTime, duration, { updateCount })
   }
 
   public static performInitialRender() {
