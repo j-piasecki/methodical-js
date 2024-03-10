@@ -1,7 +1,8 @@
-import { WorkingTree, ViewNode, ViewNodeManager, BaseConfig } from '@methodical-js/core'
+import { WorkingTree, ViewNode, ViewNodeManager } from '@methodical-js/core'
 import { insertNodeViewIntoDOM } from './insertNodeViewIntoDOM.js'
+import { ViewConfig, applyInitialConfig, applyUpdatedConfig } from './ViewConfig.js'
 
-interface TextConfig extends BaseConfig {
+interface TextConfig extends ViewConfig {
   value: string
 }
 
@@ -12,6 +13,8 @@ const viewManager: ViewNodeManager = {
     const view = document.createElement('span')
 
     view.appendChild(textNode)
+
+    applyInitialConfig(view, config, ['value'])
 
     node.viewReference = view
     insertNodeViewIntoDOM(node)
@@ -25,12 +28,14 @@ const viewManager: ViewNodeManager = {
   updateView(oldNode: ViewNode, newNode: ViewNode) {
     const view = newNode.viewReference as HTMLSpanElement | undefined
     const textNode = view?.firstChild as Text | undefined
-    if (textNode === undefined) {
+    if (view === undefined || textNode === undefined) {
       return
     }
 
     const oldConfig = oldNode.config as TextConfig
     const newConfig = newNode.config as TextConfig
+
+    applyUpdatedConfig(view, oldConfig, newConfig, ['value'])
 
     if (newConfig.value !== oldConfig.value) {
       textNode.data = newConfig.value
