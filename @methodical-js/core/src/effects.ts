@@ -31,3 +31,13 @@ export const defer = <T>(fun: () => Promise<T>, ...dependencies: unknown[]) => {
 export const SuspenseBoundary = (config: BaseConfig, body?: () => void, fallback?: () => void) => {
   return WorkingTree.createSuspenseBoundaryNode(config, body, fallback)
 }
+
+export const memoize = <T>(fun: () => T, ...dependencies: unknown[]) => {
+  const memo = remember<T>(undefined as unknown as T)
+
+  sideEffect(() => {
+    memo.value = fun()
+  }, ...dependencies)
+
+  return memo.value
+}

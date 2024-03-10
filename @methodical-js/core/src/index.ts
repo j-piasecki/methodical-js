@@ -12,5 +12,13 @@ export { Tracing } from './Tracing.js'
 
 export { createBoundary } from './createBoundary.js'
 
-export { remember, sideEffect, eventHandler, suspend, defer, SuspenseBoundary } from './effects.js'
+export {
+  remember,
+  sideEffect,
+  eventHandler,
+  suspend,
+  defer,
+  SuspenseBoundary,
+  memoize,
+} from './effects.js'
 export { createAmbient, readAmbient } from './Ambient.js'
