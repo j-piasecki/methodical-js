@@ -27,6 +27,7 @@ export {
 export { on } from './on.js'
 export { Div } from './views/Div.js'
 export { Text } from './views/Text.js'
+export { Input } from './views/Input.js'
 
 export { getNavigation } from './navigation/navigation.js'
 export { Navigator } from './navigation/Navigator.js'
