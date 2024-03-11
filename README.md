@@ -122,10 +122,6 @@ Obecnie dostępne widoki:
 
 Oczywiście, możliwe jest też tworzenie własnych funkcji odpowiadających wymaganym elementom HTML przy użyciu interfejsu `ViewNodeManager` oraz funkcji `createViewNode` oferowane przez klasę `WorkingTree`.
 
-#### Nawigacja
-
-TODO
-
 ### Funkcje
 
 - `remember<T>(value: T): RememberedValue<T>` - Tworzy węzeł przechowujący stan pomiędzy aktualizacjami interfejsu. Modyfikacja zapamiętanej wartości powoduje przebudowanie rodzica oraz aktualizację interfejsu.
@@ -134,5 +130,54 @@ TODO
 - `suspend<T>(() => Promise<T>, ...dependencies): T` - Przyjmuje funkcję asynchroniczną jako pierwszy argument oraz listę zależności jako drugi. Przy pierwszym wywołaniu (oraz przy każdorazowej zmianie którejś z zależności - porównanie przez referencję) wywołuje otrzymaną funkcję oraz przerywa budowę obecnego poddrzewa aż do napotkania pierwszego komponentu typu `SuspenseBoundary` będącego jej przodkiem. Kiedy funkcja asynchroniczna się zakończy i zwróci wynik, poddrzewo zostaje przebudowane i zwrócona wartość jest możliwa do odczytu.
 - `defer<T>(() => Promise<T>, ...dependencies): T` - Działa bardzo podobnie do `suspend` z tą różnicą, że w przypadku zmiany którejkolwiek z zależności budowa poddrzewa nie zostaje przerwana. Zamiast tego, wyświetlana jest poprzednia wersja drzewa a funkcja asynchroniczna jest uruchamiana w tle. Po jej zakończeniu, poddrzewo jest przebudowywane ze zaktualizowaną wartością.
 - `memoize<T>(() => T, ...dependencies): T` - Pozwala na memoizację wyniku funkcji pomiędzy różnymi wersjami drzewa. Funkcja obliczająca wartość zostanie wywołana za pierwszym razem oraz w przypadku zmiany którejś z zależności. W pozostałych przypadkach, wykorzystana zostanie wartość obliczona wcześniej. Przydatna do optymalizacji złożonych obliczeń zależnych od stanu, który nie zawsze zmienia się podczas przebudowy drzewa.
-- `createAmbient`
-- `readAmbient`
+- `createAmbient<T>(key: string): Ambient<T>` - Pozwala stworzyć komponent, który udostępnia swoim potomkom dodatkowe informacje które można odczytać na dowolnym poziomie w drzewie. Zwraca funkcję, która w swoim obiekcie konfiguracyjnym, przyjmuje pole `value: T` i zmiany tej wartości powodują przebudowanie wszystkich potomków, którzy ją odczytują. Szczególne znaczenie ma to w połączeniu z czystymi komponentami, które przerywają przebudowywanie poddrzewa. W takim przypadku, przebudowane zostaną tylko komponenty, które odczytują wartość.
+- `readAmbient<T>(Ambient<T>): T` - Pozwala na odczytanie wartości udostępnianej przez przodka typu `Ambient`. Odczytanie wartości powoduje, że dany węzeł zaczyna nasłuchiwać na zmiany odczytanej wartości i jest przebudowaywany kiedy taka nastąpi.
+
+### Nawigacja
+
+Framework udostępnia dwa komponenty do budowania nawigacji: `Navigator` i `Route`. Oba komponenty przyjmują jako argumenty ścieżkę oraz funkcję budującą ich ciało. Ścieżka to wzór adresów, które powinny być dopasowane do danego komponentu. Ścieżka może być statyczna, ale może też być parametryzowana przez użycie symbolu `:`, np. `/user/:userId`. Wspomniane komponenty różnią się one zachowaniem: komponenty typu `Navigator` można zagnieżdzać, budując w ten sposób coraz bardziej złożoną nawigację, natomiast komponenty typu `Route` stanowią liście w kontekście nawigacji - nie mogą zawierać innych komponentów nawigacyjnych w swoich poddrzewach. Najprościej to zachowanie prezentuje prosty przykład:
+
+```js
+Navigator('/', () => {
+  Route('/', () => Square('red'))
+
+  Route('/random', () => {
+    const red = Math.random() * 255
+    const green = Math.random() * 255
+    const blue = Math.random() * 255
+
+    Square(`rgb(${red}, ${green}, ${blue})`)
+  })
+
+  Navigator('/custom', () => {
+    Route('/:color', () => {
+      const navigation = getNavigation()
+      const color = navigation.params.color
+      Square(color)
+    })
+
+    Route('/hex/:color', () => {
+      const navigation = getNavigation()
+      const color = navigation.params.color
+      Square(`#${color}`)
+    })
+  })
+})
+```
+
+Powyższy kod wyświetla kolorowy kwadra, którego kolor zależy od odwiedzonej ścieżki:
+
+- `/` - kolor czerwony
+- `/random` - losowy kolor
+- `/custom/yellow` - kolor żółty
+- `/custom/hex/000000` - kolor czarny
+
+Dodarkowo dostępna jest funkcja `getNavigation()` zwracająca obiekt pozwalający na odczytywanie informacji o ścieżce oraz na jej modyfikowanie. Udostępnia następujące pola:
+
+- `hash` - Zwraca część adresu po symbolu `#`
+- `query` - Zwraca obiekt klucz-wartość na podstawie części adresu po symbolu `?`
+- `params` - Zwraca obiekt klucz-wartość na podstawie parametrów występujących w ścieżce
+- `back()` - Pozwala na powrót do poprzedniej ścieżki
+- `navigate(string)` - Pozwala na nawigowanie do wskazanej ścieżki, jeżeli nowa ścieżka zaczyna się od `./` lub `../` jest ona traktowana jako relatywna do obecnej, w przeciwnym wypadku jest traktowana jako ścieżka absolutna. Możliwe jest też przekazanie napisu zaczynającego się od `#` lub `?` żeby zmodyfikować odpowiednio pole `hash` i `query`.
+
+Każda zmiana ścieżki powoduje aktualizację komponentów odpowiedzialnych za nawigację, które następnie próbują dopasować ścieżkę do wzorca który miały przekazane jako argument. Jeżeli dopasowanie się uda, wywoływane jest ich ciało.
