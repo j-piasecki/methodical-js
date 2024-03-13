@@ -109,6 +109,18 @@ Div({ id: 'root' }, () => {
 
 Modyfikacja stanu w tym przypadku, spowoduje przebudowanie komponentu o id `root`, a tym samym również jego dzieci. Komponent `child3` jest oznaczony jako czysta funkcja oraz jego obiekt konfiguracyjny nie zmienia się, zatem poddrzewo tego węzła nie zostanie przebudowane. Tzn. Przy aktualizacji stanu na konsoli otrzymamy wynik `124`, ponieważ ciało `child3` nie zostanie wykonane.
 
+## Opis wysokopoziomowy
+
+Wewnętrznie, hierarchia komponentów przechowywana jest w strukturze drzewa. Korzeń jest zawsze zdefiniowany i pełni rolę wartownika aby drzewo nigdy nie było puste. Podczas inicjalizacji, element w którym budowana będzie hierarchia elementów HTML jest przypisywany jako referencja widoku w korzeniu i nie zmienia się w trakcie działania aplikacji. Każda z funkcji odpowiedzialnych za tworzenie elementów, manipulację stanem lub wywoływanie efektów, wewnętrznie wykonuje operacje na drzewie.
+
+TODO:
+
+- pierwsza budowa drzewa
+- zmiana stanu i przebudowywanie
+- ambient
+- suspense
+- renderowanie
+
 ## Dostępne funkcjonalności
 
 ### Widoki
