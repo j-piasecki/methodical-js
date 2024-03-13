@@ -109,6 +109,79 @@ Div({ id: 'root' }, () => {
 
 Modyfikacja stanu w tym przypadku, spowoduje przebudowanie komponentu o id `root`, a tym samym również jego dzieci. Komponent `child3` jest oznaczony jako czysta funkcja oraz jego obiekt konfiguracyjny nie zmienia się, zatem poddrzewo tego węzła nie zostanie przebudowane. Tzn. Przy aktualizacji stanu na konsoli otrzymamy wynik `124`, ponieważ ciało `child3` nie zostanie wykonane.
 
+## Dostępne funkcjonalności
+
+### Widoki
+
+Obecnie dostępne widoki:
+
+- `SuspenseBoundary` - Pozwala na wyświetlanie tymczasowego stanu interfejsu kiedy wczytywane są rzeczywiste dane w połączeniu z funkcjami `suspend` i `defer`.
+- `Div`
+- `Input`
+- `Text` (odpowiadający elementowi `<span />`)
+
+Oczywiście, możliwe jest też tworzenie własnych funkcji odpowiadających wymaganym elementom HTML przy użyciu interfejsu `ViewNodeManager` oraz funkcji `createViewNode` oferowane przez klasę `WorkingTree`.
+
+### Funkcje
+
+- `remember<T>(value: T): RememberedValue<T>` - Tworzy węzeł przechowujący stan pomiędzy aktualizacjami interfejsu. Modyfikacja zapamiętanej wartości powoduje przebudowanie rodzica oraz aktualizację interfejsu.
+- `sideEffect(() => (void | () => void), ...dependencies)` - Reprezentuje efekt uboczny funkcji. Pierwszym argumentem jest funkcja (która opcjonalnie może zwracać funkcję sprzątającą), kolejne argumenty to zależności, które są wariadyczne. Przy pierwszym wywołaniu efektu, wykonana zostanie funkcja z pierwszego argumentu i jej wynik wraz z zależnościami zostaje zapisany w drzewie stanu. W przypadku zmiany którejś z zależności (porównanie ze względu na referencję, nie wartość), wykonana zostanie funkcja sprzątająca (o ile została zwrócona) i efekt zostanie wykonany ponownie.
+- `on(name: string, handler: (event) => void, ...dependencies)` - Reprezentuje obsługę zdarzenia o podanej nazwie. Za każdym razem kiedy zdarzenie o danej nazwie zostanie wyemitowane i jego celem będzie rodzic, w którym ta funkcja została wywołana, uruchomiona będzie funkcja przekazywana w drugim argumencie i obiekt reprezentujący zdarzenie zostanie jej przekazany. Węzeł w drzewie zostanie zaktualizowany w przypadku zmiany którejkowiek z zależności (ponownie, porównanie przez referencję).
+- `suspend<T>(() => Promise<T>, ...dependencies): T` - Przyjmuje funkcję asynchroniczną jako pierwszy argument oraz listę zależności jako drugi. Przy pierwszym wywołaniu (oraz przy każdorazowej zmianie którejś z zależności - porównanie przez referencję) wywołuje otrzymaną funkcję oraz przerywa budowę obecnego poddrzewa aż do napotkania pierwszego komponentu typu `SuspenseBoundary` będącego jej przodkiem. Kiedy funkcja asynchroniczna się zakończy i zwróci wynik, poddrzewo zostaje przebudowane i zwrócona wartość jest możliwa do odczytu.
+- `defer<T>(() => Promise<T>, ...dependencies): T` - Działa bardzo podobnie do `suspend` z tą różnicą, że w przypadku zmiany którejkolwiek z zależności budowa poddrzewa nie zostaje przerwana. Zamiast tego, wyświetlana jest poprzednia wersja drzewa a funkcja asynchroniczna jest uruchamiana w tle. Po jej zakończeniu, poddrzewo jest przebudowywane ze zaktualizowaną wartością.
+- `memoize<T>(() => T, ...dependencies): T` - Pozwala na memoizację wyniku funkcji pomiędzy różnymi wersjami drzewa. Funkcja obliczająca wartość zostanie wywołana za pierwszym razem oraz w przypadku zmiany którejś z zależności. W pozostałych przypadkach, wykorzystana zostanie wartość obliczona wcześniej. Przydatna do optymalizacji złożonych obliczeń zależnych od stanu, który nie zawsze zmienia się podczas przebudowy drzewa.
+- `createAmbient<T>(key: string): Ambient<T>` - Pozwala stworzyć komponent, który udostępnia swoim potomkom dodatkowe informacje które można odczytać na dowolnym poziomie w drzewie. Zwraca funkcję, która w swoim obiekcie konfiguracyjnym, przyjmuje pole `value: T` i zmiany tej wartości powodują przebudowanie wszystkich potomków, którzy ją odczytują. Szczególne znaczenie ma to w połączeniu z czystymi komponentami, które przerywają przebudowywanie poddrzewa. W takim przypadku, przebudowane zostaną tylko komponenty, które odczytują wartość.
+- `readAmbient<T>(Ambient<T>): T` - Pozwala na odczytanie wartości udostępnianej przez przodka typu `Ambient`. Odczytanie wartości powoduje, że dany węzeł zaczyna nasłuchiwać na zmiany odczytanej wartości i jest przebudowaywany kiedy taka nastąpi.
+
+### Nawigacja
+
+Framework udostępnia dwa komponenty do budowania nawigacji: `Navigator` i `Route`. Oba komponenty przyjmują jako argumenty ścieżkę oraz funkcję budującą ich ciało. Ścieżka to wzór adresów, które powinny być dopasowane do danego komponentu. Ścieżka może być statyczna, ale może też być parametryzowana przez użycie symbolu `:`, np. `/user/:userId`. Wspomniane komponenty różnią się one zachowaniem: komponenty typu `Navigator` można zagnieżdzać, budując w ten sposób coraz bardziej złożoną nawigację, natomiast komponenty typu `Route` stanowią liście w kontekście nawigacji - nie mogą zawierać innych komponentów nawigacyjnych w swoich poddrzewach. Najprościej to zachowanie prezentuje prosty przykład:
+
+```js
+Navigator('/', () => {
+  Route('/', () => Square('red'))
+
+  Route('/random', () => {
+    const red = Math.random() * 255
+    const green = Math.random() * 255
+    const blue = Math.random() * 255
+
+    Square(`rgb(${red}, ${green}, ${blue})`)
+  })
+
+  Navigator('/custom', () => {
+    Route('/:color', () => {
+      const navigation = getNavigation()
+      const color = navigation.params.color
+      Square(color)
+    })
+
+    Route('/hex/:color', () => {
+      const navigation = getNavigation()
+      const color = navigation.params.color
+      Square(`#${color}`)
+    })
+  })
+})
+```
+
+Powyższy kod wyświetla kolorowy kwadra, którego kolor zależy od odwiedzonej ścieżki:
+
+- `/` - kolor czerwony
+- `/random` - losowy kolor
+- `/custom/yellow` - kolor żółty
+- `/custom/hex/000000` - kolor czarny
+
+Dodarkowo dostępna jest funkcja `getNavigation()` zwracająca obiekt pozwalający na odczytywanie informacji o ścieżce oraz na jej modyfikowanie. Udostępnia następujące pola:
+
+- `hash` - Zwraca część adresu po symbolu `#`
+- `query` - Zwraca obiekt klucz-wartość na podstawie części adresu po symbolu `?`
+- `params` - Zwraca obiekt klucz-wartość na podstawie parametrów występujących w ścieżce
+- `back()` - Pozwala na powrót do poprzedniej ścieżki
+- `navigate(string)` - Pozwala na nawigowanie do wskazanej ścieżki, jeżeli nowa ścieżka zaczyna się od `./` lub `../` jest ona traktowana jako relatywna do obecnej, w przeciwnym wypadku jest traktowana jako ścieżka absolutna. Możliwe jest też przekazanie napisu zaczynającego się od `#` lub `?` żeby zmodyfikować odpowiednio pole `hash` i `query`.
+
+Każda zmiana ścieżki powoduje aktualizację komponentów odpowiedzialnych za nawigację, które następnie próbują dopasować ścieżkę do wzorca który miały przekazane jako argument. Jeżeli dopasowanie się uda, wywoływane jest ich ciało.
+
 ## Opis wysokopoziomowy
 
 Wewnętrznie, hierarchia komponentów przechowywana jest w strukturze drzewa. Korzeń jest zawsze zdefiniowany i pełni rolę wartownika aby drzewo nigdy nie było puste. Podczas inicjalizacji, element w którym budowana będzie hierarchia elementów HTML jest przypisywany jako referencja widoku w korzeniu i nie zmienia się w trakcie działania aplikacji. Każda z funkcji odpowiedzialnych za tworzenie elementów, manipulację stanem lub wywoływanie efektów, wewnętrznie wykonuje operacje na drzewie.
@@ -197,118 +270,108 @@ Węzeł `#` reprezentuje korzeń wykorzystywany wewnętrznie przez framework i b
 
 ### Modyfikacja stanu
 
-TODO:
+Do przechowywania stanu wykorzystywana jest funkcja `remember`, tworząca w drzewie węzeł `RememberNode`. Każdy węzeł tego typu przechowuje obiekt proxy pozwalający na dostęp do zapamiętanej wartości (i jest on zwracany przez `remember`). Przechwytuje on operacje zapisu i przy każdej z nich kolejkuje aktualizację na swojego rodzica, ponieważ zmiana zapamiętanej wartości może mieć wpływ na jego rodzeństwo (warość może być użyta jako zależność, lub do manipulacji samym drzewem przy użyciu instrukcji sterujących).
 
-- zmiana stanu
-- przebudowywanie
-- ambient
-- suspense
-- renderowanie
+Kolejkowanie aktualizacji obsługiwane jest za pomocą drzewa prefiksowego, w którym zapisywana jest ścieżka do aktualizowanego węzła. Podczas aplikowania aktualizacji, obliczane są prefiksy ścieżek i węzły znajdujące się na tych ścieżkach są przebudowywane. Pozwala to uniknąć niepotrzebnego przebudowywania węzłów w sytuacjach gdzie aktualizowany jest zarówno rodzic jak i któryś z jego potomków. Przy naiwnej implementacji przebudowane zostałyby oba węzły, przy czym potomek (a tym samym całe poddrzewo) byłby przebudowany dwukrotnie - pierwszy raz przez przebudowanie rodzica, drugi przez bezpośrednie przebudowanie potomka. Można tą sytuację łatwo zilustować rozważając następujące drzewo, w którym węzły pomarańczowe przechowują stan:
 
 ```mermaid
 graph TD
-    A((A))
-    B((B))
-    C((C))
-    D((D))
-    E((E))
-    F((F))
+  A((A))
+  B((B))
+  C((C))
+  E((E))
+  F((F))
+  0((0))
+  1((1))
+  2((2))
 
-subgraph Test
-    A --> B
-    A --> C
-    B --> D
-    B --> E
-    C --> F
-    end
+  A --> 0
+  A --> B
+  A --> C
+  B --> 1
+  C --> E
+  C --> F
+  E --> 2
 
-subgraph Test2
-    A' --> B'
-    A' --> C'
-    B' --> D'
-    B' --> E'
-    C' --> F'
-end
-
-  A ---> A'
-  B ---> B'
-  C ---> C'
-  D ---> D'
-  E ---> E'
-  F ---> F'
-
-    style A fill:#555
+  style 0 fill:#950
+  style 1 fill:#950
+  style 2 fill:#950
 ```
 
-## Dostępne funkcjonalności
+W przypadku modyfikacji wartości zapisanej w węzłach `1` i `2`, zakolejkowane zostaną następujące aktualizacje:
 
-### Widoki
+```mermaid
+graph TD
+  A((A))
+  B((B))
+  C((C))
+  E((E))
 
-Obecnie dostępne widoki:
+  A --> C
+  A --> B
+  C --> E
 
-- `SuspenseBoundary` - Pozwala na wyświetlanie tymczasowego stanu interfejsu kiedy wczytywane są rzeczywiste dane w połączeniu z funkcjami `suspend` i `defer`.
-- `Div`
-- `Input`
-- `Text` (odpowiadający elementowi `<span />`)
-
-Oczywiście, możliwe jest też tworzenie własnych funkcji odpowiadających wymaganym elementom HTML przy użyciu interfejsu `ViewNodeManager` oraz funkcji `createViewNode` oferowane przez klasę `WorkingTree`.
-
-### Funkcje
-
-- `remember<T>(value: T): RememberedValue<T>` - Tworzy węzeł przechowujący stan pomiędzy aktualizacjami interfejsu. Modyfikacja zapamiętanej wartości powoduje przebudowanie rodzica oraz aktualizację interfejsu.
-- `sideEffect(() => (void | () => void), ...dependencies)` - Reprezentuje efekt uboczny funkcji. Pierwszym argumentem jest funkcja (która opcjonalnie może zwracać funkcję sprzątającą), kolejne argumenty to zależności, które są wariadyczne. Przy pierwszym wywołaniu efektu, wykonana zostanie funkcja z pierwszego argumentu i jej wynik wraz z zależnościami zostaje zapisany w drzewie stanu. W przypadku zmiany którejś z zależności (porównanie ze względu na referencję, nie wartość), wykonana zostanie funkcja sprzątająca (o ile została zwrócona) i efekt zostanie wykonany ponownie.
-- `on(name: string, handler: (event) => void, ...dependencies)` - Reprezentuje obsługę zdarzenia o podanej nazwie. Za każdym razem kiedy zdarzenie o danej nazwie zostanie wyemitowane i jego celem będzie rodzic, w którym ta funkcja została wywołana, uruchomiona będzie funkcja przekazywana w drugim argumencie i obiekt reprezentujący zdarzenie zostanie jej przekazany. Węzeł w drzewie zostanie zaktualizowany w przypadku zmiany którejkowiek z zależności (ponownie, porównanie przez referencję).
-- `suspend<T>(() => Promise<T>, ...dependencies): T` - Przyjmuje funkcję asynchroniczną jako pierwszy argument oraz listę zależności jako drugi. Przy pierwszym wywołaniu (oraz przy każdorazowej zmianie którejś z zależności - porównanie przez referencję) wywołuje otrzymaną funkcję oraz przerywa budowę obecnego poddrzewa aż do napotkania pierwszego komponentu typu `SuspenseBoundary` będącego jej przodkiem. Kiedy funkcja asynchroniczna się zakończy i zwróci wynik, poddrzewo zostaje przebudowane i zwrócona wartość jest możliwa do odczytu.
-- `defer<T>(() => Promise<T>, ...dependencies): T` - Działa bardzo podobnie do `suspend` z tą różnicą, że w przypadku zmiany którejkolwiek z zależności budowa poddrzewa nie zostaje przerwana. Zamiast tego, wyświetlana jest poprzednia wersja drzewa a funkcja asynchroniczna jest uruchamiana w tle. Po jej zakończeniu, poddrzewo jest przebudowywane ze zaktualizowaną wartością.
-- `memoize<T>(() => T, ...dependencies): T` - Pozwala na memoizację wyniku funkcji pomiędzy różnymi wersjami drzewa. Funkcja obliczająca wartość zostanie wywołana za pierwszym razem oraz w przypadku zmiany którejś z zależności. W pozostałych przypadkach, wykorzystana zostanie wartość obliczona wcześniej. Przydatna do optymalizacji złożonych obliczeń zależnych od stanu, który nie zawsze zmienia się podczas przebudowy drzewa.
-- `createAmbient<T>(key: string): Ambient<T>` - Pozwala stworzyć komponent, który udostępnia swoim potomkom dodatkowe informacje które można odczytać na dowolnym poziomie w drzewie. Zwraca funkcję, która w swoim obiekcie konfiguracyjnym, przyjmuje pole `value: T` i zmiany tej wartości powodują przebudowanie wszystkich potomków, którzy ją odczytują. Szczególne znaczenie ma to w połączeniu z czystymi komponentami, które przerywają przebudowywanie poddrzewa. W takim przypadku, przebudowane zostaną tylko komponenty, które odczytują wartość.
-- `readAmbient<T>(Ambient<T>): T` - Pozwala na odczytanie wartości udostępnianej przez przodka typu `Ambient`. Odczytanie wartości powoduje, że dany węzeł zaczyna nasłuchiwać na zmiany odczytanej wartości i jest przebudowaywany kiedy taka nastąpi.
-
-### Nawigacja
-
-Framework udostępnia dwa komponenty do budowania nawigacji: `Navigator` i `Route`. Oba komponenty przyjmują jako argumenty ścieżkę oraz funkcję budującą ich ciało. Ścieżka to wzór adresów, które powinny być dopasowane do danego komponentu. Ścieżka może być statyczna, ale może też być parametryzowana przez użycie symbolu `:`, np. `/user/:userId`. Wspomniane komponenty różnią się one zachowaniem: komponenty typu `Navigator` można zagnieżdzać, budując w ten sposób coraz bardziej złożoną nawigację, natomiast komponenty typu `Route` stanowią liście w kontekście nawigacji - nie mogą zawierać innych komponentów nawigacyjnych w swoich poddrzewach. Najprościej to zachowanie prezentuje prosty przykład:
-
-```js
-Navigator('/', () => {
-  Route('/', () => Square('red'))
-
-  Route('/random', () => {
-    const red = Math.random() * 255
-    const green = Math.random() * 255
-    const blue = Math.random() * 255
-
-    Square(`rgb(${red}, ${green}, ${blue})`)
-  })
-
-  Navigator('/custom', () => {
-    Route('/:color', () => {
-      const navigation = getNavigation()
-      const color = navigation.params.color
-      Square(color)
-    })
-
-    Route('/hex/:color', () => {
-      const navigation = getNavigation()
-      const color = navigation.params.color
-      Square(`#${color}`)
-    })
-  })
-})
+  style E fill:#050
+  style B fill:#050
 ```
 
-Powyższy kod wyświetla kolorowy kwadra, którego kolor zależy od odwiedzonej ścieżki:
+Gdyby aktualizacja została zaaplikowana w takim stanie, przebudowane zostałyby węzły `B` oraz `E`. Jeżeli jednak zostanie też zmodyfikowana wartość zapisana w węźle `1`, zakolejkowana zostanie kolejna aktualizacja:
 
-- `/` - kolor czerwony
-- `/random` - losowy kolor
-- `/custom/yellow` - kolor żółty
-- `/custom/hex/000000` - kolor czarny
+```mermaid
+graph TD
+  A((A))
+  B((B))
+  C((C))
+  E((E))
 
-Dodarkowo dostępna jest funkcja `getNavigation()` zwracająca obiekt pozwalający na odczytywanie informacji o ścieżce oraz na jej modyfikowanie. Udostępnia następujące pola:
+  A --> C
+  A --> B
+  C --> E
 
-- `hash` - Zwraca część adresu po symbolu `#`
-- `query` - Zwraca obiekt klucz-wartość na podstawie części adresu po symbolu `?`
-- `params` - Zwraca obiekt klucz-wartość na podstawie parametrów występujących w ścieżce
-- `back()` - Pozwala na powrót do poprzedniej ścieżki
-- `navigate(string)` - Pozwala na nawigowanie do wskazanej ścieżki, jeżeli nowa ścieżka zaczyna się od `./` lub `../` jest ona traktowana jako relatywna do obecnej, w przeciwnym wypadku jest traktowana jako ścieżka absolutna. Możliwe jest też przekazanie napisu zaczynającego się od `#` lub `?` żeby zmodyfikować odpowiednio pole `hash` i `query`.
+  style E fill:#050
+  style B fill:#050
+  style A fill:#050
+```
 
-Każda zmiana ścieżki powoduje aktualizację komponentów odpowiedzialnych za nawigację, które następnie próbują dopasować ścieżkę do wzorca który miały przekazane jako argument. Jeżeli dopasowanie się uda, wywoływane jest ich ciało.
+W takiej sytuacji bezpośrednio przebudowany zostanie tylko węzeł `A`, ponieważ jego ścieżka stanowi prefiks dla dwóch pozostałych aktualizacji. Istnieje jednak przypadek, w którym powinny zostać przebudowane zarówno komponent znajdujący się na ścieżce reprezentowanej przez prefiks, jak i komponenty leżące głębiej w drzewie. Kiedy na ścieżce pomiędzy dwoma komponentami oczekującymi na aktualizację znajduje się czysty komponent, którego konfiguracja się nie zmieniła opisane powyżej podejście spowodowałoby zgubienie aktualizacji dla komponentu leżącego głębiej, np.:
+
+```mermaid
+graph TD
+  A((A))
+  B((B))
+  C((C))
+  E((E))
+  F((F))
+  0((0))
+  1((1))
+
+  A --> 0
+  A --> B
+  B --> C
+  C --> E
+  C --> F
+  E --> 1
+
+  style 0 fill:#950
+  style 1 fill:#950
+  style C fill:#909
+```
+
+Przyjmując, że węzeł `C` reprezentuje czysty komponent i jego konfiguracja nie zmieniła się aplikując następującą aktualizację, która jest możliwa do uzyskania np. przez obsługę zdarzenia, lub zmianę wartości na obserwowanym węźle `Ambient`:
+
+```mermaid
+graph TD
+  A((A))
+  B((B))
+  C((C))
+  E((E))
+
+  A --> B
+  B --> C
+  C --> E
+
+  style E fill:#050
+  style A fill:#050
+```
+
+Na węźle `C` przebudowywanie poddrzewa zostałoby przerwane i węzeł `E` nie zostałby przebudowany. Dlatego w przypadku wykorzystywania poprzedniego poddrzewa przez czysty komponent, dodatkowo sprawdza on czy nie ma zakolejkowanej aktualizacji na którys z jego potomków poprzez sprawdzenie drzewa prefiksowego. Jeżeli odpowiadający mu węzeł istnieje, oznacza to że któryś z jego potomków lub on sam powinny zostać zaktualizowane, w takiej sytuacji aktualizacja na odpowiednie węzły jest rekolejkowana i wykonywana w tym samym cyklu aby uniknąć rozbieżności w stanie pomiędzy węzłami.
