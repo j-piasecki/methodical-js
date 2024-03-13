@@ -113,10 +113,94 @@ Modyfikacja stanu w tym przypadku, spowoduje przebudowanie komponentu o id `root
 
 Wewnętrznie, hierarchia komponentów przechowywana jest w strukturze drzewa. Korzeń jest zawsze zdefiniowany i pełni rolę wartownika aby drzewo nigdy nie było puste. Podczas inicjalizacji, element w którym budowana będzie hierarchia elementów HTML jest przypisywany jako referencja widoku w korzeniu i nie zmienia się w trakcie działania aplikacji. Każda z funkcji odpowiedzialnych za tworzenie elementów, manipulację stanem lub wywoływanie efektów, wewnętrznie wykonuje operacje na drzewie.
 
+### Opis drzewa
+
+Drzewo może zawierać kilka rodzajów węzłów, które można podzielić na dwie grupy: widoki i efekty. Widoki są węzłami używanymi do budowania hierarchi interfejsu, natomiast efekty pozwalają na jego interaktywność. W związku z tym można wyróżnić ważną cechę: węzły odpowiadające efektom zawsze będą liściami, natomiast węzły wewnętrzne zawsze będą widokiem.
+
+Budowanie interfejsu opiera się na składaniu kolejnych funkcji - widok otrzymuje obiekt konfiguracyjny oraz funkcję reprezentującą jego ciało. Wewnętrznie wywoływana jest odpowiednia metoda na drzewie (`WorkingTree.createViewNode`), która przed wykonaniem funkcji ciała, ustawia odpowiednią referencję do właśnie utworzonego węzła. W ten sposób, kiedy węzeł jest tworzony ma on dostęp do swojego rodzica, a tym samym do wszystkich swoich przodków. Dodatkowo, w przypadku aktualizacji, propagowana jest referencja do odpowiadającego węzła w poprzednim drzewie co pozwala na propagację stanu pomiędzy różnymi wersjami drzewa oraz na optymalizowanie przypadków kiedy dany węzeł nie musi zostać przebudowany.
+
+Każdy węzeł przechowuje znaczące informacje, które różnią się w zależności od typu:
+
+- `ViewNode` - Przechowuje obiekt konfiguracyjny oraz funkcję reprezentującą ciało, które są wykorzystywane w przypadku przebudowy.
+- `RootNode` - Wyróżniony `ViewNode` pełniący rolę wartownika.
+- `RebuildingNode` - Wyróżniony `ViewNode`, tworzony podczas procesu przebudowy drzewa.
+- `SuspenseBoundary` - Specjalny rodzaj `ViewNode`, zawierający logikę obsługującą przerywanie budowania poddrzewa oraz przechowywanie tymczasowego staniu węzłów przerywających.
+- `Ambient` - Specjalny rodzaj `ViewNode`, który udostępnia pewną wartość wszystkim swoim potomkom oraz pozwala obserwować jej zmiany. W przypadku zmiany wartości, kolejkowana jest aktualizacja na wszystkich obserwujących węzłach.
+- `RememberNode` - Przechowuje obiekt proxy opakowujący zapamiętaną wartość. Modyfikacja wartości tego obiektu powoduje zakolejkowanie aktualizacji rodzica.
+- `EffectNode` - Przechowuje funkcję sprzątającą oraz zależności. W przypadku zmiany zależności, wywoływana jest funkcja sprzątająca oraz nowo zbudowany efekt.
+- `SuspendNode` - Przechowuje funkcję asynchroniczną, zwróconą wartość oraz zależności. W przypadku zmiany zależności, funkcja uruchamiana jest na nowo a budowa danego poddrzewa jest przerywana. Kiedy uruchomiona funkcja się zakończy, kolejkowana jest aktualizacja na pierwszym przodku typu `SuspenseBoundary`.
+- `DeferNode` - Specjalny rodzaj `SuspendNode`, który przerywa budowanie poddrzewa tylko przy pierwszym utworzeniu. Podczas aktualizacji, w przypadku zmiany zależności, uruchamiana jest funkcja asynchroniczna, a kiedy się zakończy kolejkowana jest aktualizacja na pierwszym przodku typu `SuspenseBoundary`.
+
+Warto zwrócić uwagę na fakt, że nie każdy węzeł widoku musi posiadać referencję do faktycznego widoku (elementu HMTL), w szczególności takowej nie posiadają węzły `Ambient`, `SuspenseBoundary` oraz `RebuildingNode`.
+
+### Pierwsza budowa drzewa
+
+Do rozpoczęcia działania, wymagane jest zawołanie metody `init` oraz przekazania jej referencji do elementu, w którym ma być zbudowana hierarchia komponentów, np.:
+
+```js
+Methodical.init(document.getElementById('app'))
+```
+
+Przypisuje ona otrzymaną referencję elementu do korzenia drzewa, buduje pierwsze drzewo i uruchamia pętlę, która w każdej klatce sprawdza czy zakolejkowane były aktualizacje stanu i ewentualnie aplikuje je powodując przebudowanie drzewa tak aby odzwierciedlało nowy stan. W większości przypadków (chyba że zastosowane będą "płaskie" komponenty), każdej funkcji widoku i efektu będzie odpowiadał dokładnie jeden węzeł w drzewie, np.:
+
+```js
+Div({ id: 'A' }, () => {
+  const val = remember(0)
+
+  Div({ id: 'B' }, () => {
+    const val = remember(1)
+  })
+
+  Div({ id: 'C' }, () => {
+    Div({ id: 'E' }, () => {
+      const val = remember(2)
+    })
+
+    Div({ id: 'F' }, () => {})
+  })
+
+  Div({ id: 'D' }, () => {})
+})
+```
+
+spowoduje zbudowanie następującego drzewa (kolorem pomarańczowym oznaczone są węzły efektów):
+
+```mermaid
+graph TD
+  #((#))
+  A((A))
+  B((B))
+  C((C))
+  D((D))
+  E((E))
+  F((F))
+  0((0))
+  1((1))
+  2((2))
+
+  # --> A
+  A --> 0
+  A --> B
+  A --> C
+  A --> D
+  B --> 1
+  C --> E
+  C --> F
+  E --> 2
+
+  style 0 fill:#950
+  style 1 fill:#950
+  style 2 fill:#950
+```
+
+Węzeł `#` reprezentuje korzeń wykorzystywany wewnętrznie przez framework i będzi pomijany w kolejnych diagramach.
+
+### Modyfikacja stanu
+
 TODO:
 
-- pierwsza budowa drzewa
-- zmiana stanu i przebudowywanie
+- zmiana stanu
+- przebudowywanie
 - ambient
 - suspense
 - renderowanie
@@ -130,11 +214,28 @@ graph TD
     E((E))
     F((F))
 
+subgraph Test
     A --> B
     A --> C
     B --> D
     B --> E
     C --> F
+    end
+
+subgraph Test2
+    A' --> B'
+    A' --> C'
+    B' --> D'
+    B' --> E'
+    C' --> F'
+end
+
+  A ---> A'
+  B ---> B'
+  C ---> C'
+  D ---> D'
+  E ---> E'
+  F ---> F'
 
     style A fill:#555
 ```
