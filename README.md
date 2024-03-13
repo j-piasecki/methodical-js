@@ -201,6 +201,7 @@ Każdy węzeł przechowuje znaczące informacje, które różnią się w zależn
 - `Ambient` - Specjalny rodzaj `ViewNode`, który udostępnia pewną wartość wszystkim swoim potomkom oraz pozwala obserwować jej zmiany. W przypadku zmiany wartości, kolejkowana jest aktualizacja na wszystkich obserwujących węzłach.
 - `RememberNode` - Przechowuje obiekt proxy opakowujący zapamiętaną wartość. Modyfikacja wartości tego obiektu powoduje zakolejkowanie aktualizacji rodzica.
 - `EffectNode` - Przechowuje funkcję sprzątającą oraz zależności. W przypadku zmiany zależności, wywoływana jest funkcja sprzątająca oraz nowo zbudowany efekt.
+- `EventNode` - Przechowuje nazwę nasłuchiwanego zdarzenia, funkcję która je obsługuje oraz listę zależności. W przypadku zmiany zależności, poprzednia funkcja obsługująca jest usuwana i jest zastępowana nową.
 - `SuspendNode` - Przechowuje funkcję asynchroniczną, zwróconą wartość oraz zależności. W przypadku zmiany zależności, funkcja uruchamiana jest na nowo a budowa danego poddrzewa jest przerywana. Kiedy uruchomiona funkcja się zakończy, kolejkowana jest aktualizacja na pierwszym przodku typu `SuspenseBoundary`.
 - `DeferNode` - Specjalny rodzaj `SuspendNode`, który przerywa budowanie poddrzewa tylko przy pierwszym utworzeniu. Podczas aktualizacji, w przypadku zmiany zależności, uruchamiana jest funkcja asynchroniczna, a kiedy się zakończy kolejkowana jest aktualizacja na pierwszym przodku typu `SuspenseBoundary`.
 
@@ -375,3 +376,48 @@ graph TD
 ```
 
 Na węźle `C` przebudowywanie poddrzewa zostałoby przerwane i węzeł `E` nie zostałby przebudowany. Dlatego w przypadku wykorzystywania poprzedniego poddrzewa przez czysty komponent, dodatkowo sprawdza on czy nie ma zakolejkowanej aktualizacji na którys z jego potomków poprzez sprawdzenie drzewa prefiksowego. Jeżeli odpowiadający mu węzeł istnieje, oznacza to że któryś z jego potomków lub on sam powinny zostać zaktualizowane, w takiej sytuacji aktualizacja na odpowiednie węzły jest rekolejkowana i wykonywana w tym samym cyklu aby uniknąć rozbieżności w stanie pomiędzy węzłami.
+
+---
+
+TODO:
+
+- przebudowywanie
+- ambient
+- suspense
+- renderowanie
+- dobrze by było wspomnieć po co są zależności w efekcie i podmienianie funkcji (closures)
+
+```mermaid
+graph TD
+    A((A))
+    B((B))
+    C((C))
+    D((D))
+    E((E))
+    F((F))
+
+subgraph Test
+    A --> B
+    A --> C
+    B --> D
+    B --> E
+    C --> F
+    end
+
+subgraph Test2
+    A' --> B'
+    A' --> C'
+    B' --> D'
+    B' --> E'
+    C' --> F'
+end
+
+  A ---> A'
+  B ---> B'
+  C ---> C'
+  D ---> D'
+  E ---> E'
+  F ---> F'
+
+    style A fill:#555
+```
