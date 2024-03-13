@@ -121,6 +121,24 @@ TODO:
 - suspense
 - renderowanie
 
+```mermaid
+graph TD
+    A((A))
+    B((B))
+    C((C))
+    D((D))
+    E((E))
+    F((F))
+
+    A --> B
+    A --> C
+    B --> D
+    B --> E
+    C --> F
+
+    style A fill:#555
+```
+
 ## Dostępne funkcjonalności
 
 ### Widoki
