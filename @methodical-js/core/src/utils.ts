@@ -10,6 +10,14 @@ export function deepEqual(obj1: any, obj2: any) {
     return obj1 === obj2
   }
 
+  if (obj1 === undefined || obj2 === undefined) {
+    return obj1 === obj2
+  }
+
+  if (obj1 === null || obj2 === null) {
+    return obj1 === obj2
+  }
+
   if (Object.keys(obj1).length !== Object.keys(obj2).length) {
     return false
   }

@@ -165,6 +165,45 @@ test('pure view with changed config should be reevaluated and updated', () => {
   expect(innerFunction).toHaveBeenCalledTimes(2)
 })
 
+test('pure view with unchanged config but with batched update scheduled should be reevaluated', () => {
+  const viewManager = createViewManager({ createView: jest.fn() })
+  const View = createViewFunction(viewManager)
+
+  const innerFunction = jest.fn()
+
+  View({ id: 'test' }, () => {
+    const rememberedValue = remember(1)
+
+    sideEffect(() => {
+      setTimeout(() => {
+        rememberedValue.value = 2
+      }, 100)
+    })
+
+    View({ id: 'test2', pure: true }, () => {
+      const rememberedValue = remember(1)
+
+      sideEffect(() => {
+        setTimeout(() => {
+          rememberedValue.value = 2
+        }, 100)
+      })
+
+      innerFunction()
+    })
+  })
+
+  WorkingTree.performInitialRender()
+
+  expect(viewManager.createView).toHaveBeenCalledTimes(2)
+
+  jest.runAllTimers()
+
+  WorkingTree.performUpdate()
+
+  expect(innerFunction).toHaveBeenCalledTimes(2)
+})
+
 test('predecessorNode should be undefined on every node when update is finished', () => {
   const viewManager = createViewManager({})
   const View = createViewFunction(viewManager)
