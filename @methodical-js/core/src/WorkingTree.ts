@@ -158,6 +158,15 @@ export class WorkingTree {
     ) {
       if (view.body !== undefined) {
         WorkingTree.withContext(view, view.body)
+
+        if (
+          view.predecessorNode !== undefined &&
+          view.predecessorNode._nextActionId !== view._nextActionId
+        ) {
+          throw new Error(
+            `Different number of action functions was executed in the view ${view.config.id} than in the previous build.`
+          )
+        }
       }
     } else {
       // TODO: this will break when the body function changes but the config stays the same, TBD whether this is a problem
