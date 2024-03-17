@@ -269,6 +269,8 @@ graph TD
 
 Węzeł `#` reprezentuje korzeń wykorzystywany wewnętrznie przez framework i będzi pomijany w kolejnych diagramach.
 
+Klasa udostępniająca funkcje pozwalające na wykonywanie operacji na drzewie posiada referencję do obecnie przetwarzanego węzła (domyślnie, kiedy żaden węzeł nie jest przetwarzany wskazuje ona na korzeń). Każda funkcja tworząca widok czy też odpowiadająca za efekt (zapamiętanie stanu, efekt uboczny, zdarzenia, itp.) opakowuje pewne operacje na drzewie. Wywołanie funkcji widoku tworzy odpowiedni węzeł w drzewie, następnie referencja do obecnego węzła zostaje zapisana i zamieniona na nowo zbudowany węzeł. Wywoływana jest funkcja ciała, w której powyższy proces może powtórzyć się wielokrotnie w zależności od jej struktury, a kiedy wywołanie się zakończy, referencja na obecny węzeł jest z powrotem ustawiana na zapisaną przed zbudowaniem ciała. Dzięki takiemu schematowi, każdy budowany węzeł może w łatwy sposób uzyskać referencję do kontekstu (swojego rodzica w drzewie) w jakim jest budowany. Przez to, że JavaScript jest językiem operującym tylko na jednym wątku, nie ma też ryzyka na konflikt pomiędzy kilkoma poddrzewami budowanymi "równolegle".
+
 ### Modyfikacja stanu
 
 Do przechowywania stanu wykorzystywana jest funkcja `remember`, tworząca w drzewie węzeł `RememberNode`. Każdy węzeł tego typu przechowuje obiekt proxy pozwalający na dostęp do zapamiętanej wartości (i jest on zwracany przez `remember`). Przechwytuje on operacje zapisu i przy każdej z nich kolejkuje aktualizację na swojego rodzica, ponieważ zmiana zapamiętanej wartości może mieć wpływ na jego rodzeństwo (warość może być użyta jako zależność, lub do manipulacji samym drzewem przy użyciu instrukcji sterujących).
@@ -375,13 +377,22 @@ graph TD
   style A fill:#050
 ```
 
-Na węźle `C` przebudowywanie poddrzewa zostałoby przerwane i węzeł `E` nie zostałby przebudowany. Dlatego w przypadku wykorzystywania poprzedniego poddrzewa przez czysty komponent, dodatkowo sprawdza on czy nie ma zakolejkowanej aktualizacji na którys z jego potomków poprzez sprawdzenie drzewa prefiksowego. Jeżeli odpowiadający mu węzeł istnieje, oznacza to że któryś z jego potomków lub on sam powinny zostać zaktualizowane, w takiej sytuacji aktualizacja na odpowiednie węzły jest rekolejkowana i wykonywana w tym samym cyklu aby uniknąć rozbieżności w stanie pomiędzy węzłami.
+Na węźle `C` przebudowywanie poddrzewa zostałoby przerwane i węzeł `E` nie zostałby przebudowany. Dlatego w przypadku wykorzystywania poprzedniego poddrzewa przez czysty komponent, dodatkowo sprawdza on czy nie ma zakolejkowanej aktualizacji na któryś z jego potomków poprzez sprawdzenie drzewa prefiksowego. Jeżeli odpowiadający mu węzeł istnieje, oznacza to że któryś z jego potomków lub on sam powinny zostać zaktualizowane, w takiej sytuacji aktualizacja na odpowiednie węzły jest rekolejkowana i wykonywana w tym samym cyklu aby uniknąć rozbieżności w stanie pomiędzy węzłami.
+
+### Przebudowywanie poddrzewa
+
+Proces przebudowywania poddrzewa jest relatywnie prosty: tworzony jest tymczasowy węzeł (`RebuildingNode`) na podstawie węzła który ma zostać przebudowany. Tak skonstruowany węzeł posiada wszystkie najważniejsze referencje (rodzic, odpowiedni element HMTL o ile istnieje, funkcja budująca ciało) zgodne z oryginalnym. Dodatkowo, każdy węzeł posiada referencję do swojej poprzedniej wersji w drzewie, która jest wykorzystywania w trakcie przebudowy do propagacji stanu. Referencja ta jest usuwana po zakończeniu przebudowy żeby nie powodować wycieków pamięci przez przechowywanie wszystkich dotychczasowych wersji drzewa.
+
+Po utworzeniu węzła tymczasowego, jego poddrzewo jest budowane w standardowy sposób, tzn. referencja na obecny węzeł jest ustawiana na węzeł tymczasowy oraz uruchamiana jest funkcja ciała. Następująco proces przebiega identycznie jak opisano w `Pierwszej budowie drzewa`, z tą różnicą że dodatkowo propagowana jest referencja do poprzednich wersji węzłów. To również jest prosty mechanizm, opierający się na lokalnej unikalności identyfikatorów. Pierwszy przebudowywany węzęł, ma ustawioną odpowiednią referencję na początku procesu przebudowywania, następnie podczas budowy jego dzieci, są one w stanie odczytać referencję do poprzedniej wersji swojego rodzica oraz uzyskać poprzednią wersję węzła który same reprezentują na podstawie identyfikatora. Jeżeli odpowiedni węzeł istnieje, zapisywana jest referencja do niego wewnątrz węzła oraz przywracane są odpowiednie dane (zapisany stan, poprzednie zależności funkcji) oraz podejmowane ewentualne działania np. w przypadku gdy zależności zapisane w poprzedniej wersji węzła różnią się od zależności nowego węzła efektu, uruchamiana jest funkcja sprzątająca oraz ponownie efekt. Jeżeli taki węzeł nie istnieje, oznacza to że węzeł nie ma odpowiednika w poprzedniej wersji drzewa oraz powinien zostać zainicjalizowany bez stanu początkowego, jak podczas pierwszej budowy drzewa. Do takiej sytuacji może dojść, kiedy dany komponent jest wewnątrz instrukcji warunkowej zależnej od wartości stanu.
+
+Kolejną różnicą w stosunku do pierwszej budowy są komponenty czyste, które nie powinny być przebudowane, chyba że zmieniła się ich konfiguracja. Kiedy podczas procesu przebudowywania tworzony jest komponent oznaczony jako czysty, jego obiekt konfuguracyjny jest porównywany z obiektem konfiguracyjnym jego poprzedniej wersji (przez wartość). Jeżeli jego poprzednia wersja nie istnieje, lub konfiguracja zmieniła się w stosunku do poprzedniej wersji, jest on przebudowywany jak zwykły komponent. Jeżeli natomiast konfiguracja jest niezmieniona, lista dzieci jest kopiowana z poprzedniej wersji drzewa oraz aktualizowane są ich referencje wskazujące na węzeł rodzica. Dodatkowo, na widoku ustawiana jest flaga, mówiąca że został on przywrócony z poprzedniej wersji drzewa i może zostać pominięty podczas obliczania różnic pomiędzy nowym a startm drzewem w trakcie renderowania, a także kolejkowane są ewentualne aktualizacje stanu na potomkach czystego komponentu, zgodnie z opisem w `modyfikacji stanu`.
+
+Kiedy zbudowane jest całe nowe poddrzewo, renderowana jest różnica pomiędzy starym a nowo zbudowanym poddrzewem. Następnie lista dzieci węzła tymczasowego jest zapisywana w drzewie, w węźle który był przebudowywany oraz ich referencja wskazująca na rodzica zostaje zmodyfikowana tak żeby wskazywać na nowego rodzica zamiast na węzeł tymczasowy.
 
 ---
 
 TODO:
 
-- przebudowywanie
 - ambient
 - suspense
 - renderowanie
