@@ -383,7 +383,51 @@ Na węźle `C` przebudowywanie poddrzewa zostałoby przerwane i węzeł `E` nie 
 
 Proces przebudowywania poddrzewa jest relatywnie prosty: tworzony jest tymczasowy węzeł (`RebuildingNode`) na podstawie węzła który ma zostać przebudowany. Tak skonstruowany węzeł posiada wszystkie najważniejsze referencje (rodzic, odpowiedni element HMTL o ile istnieje, funkcja budująca ciało) zgodne z oryginalnym. Dodatkowo, każdy węzeł posiada referencję do swojej poprzedniej wersji w drzewie, która jest wykorzystywania w trakcie przebudowy do propagacji stanu. Referencja ta jest usuwana po zakończeniu przebudowy żeby nie powodować wycieków pamięci przez przechowywanie wszystkich dotychczasowych wersji drzewa.
 
-Po utworzeniu węzła tymczasowego, jego poddrzewo jest budowane w standardowy sposób, tzn. referencja na obecny węzeł jest ustawiana na węzeł tymczasowy oraz uruchamiana jest funkcja ciała. Następująco proces przebiega identycznie jak opisano w `Pierwszej budowie drzewa`, z tą różnicą że dodatkowo propagowana jest referencja do poprzednich wersji węzłów. To również jest prosty mechanizm, opierający się na lokalnej unikalności identyfikatorów. Pierwszy przebudowywany węzęł, ma ustawioną odpowiednią referencję na początku procesu przebudowywania, następnie podczas budowy jego dzieci, są one w stanie odczytać referencję do poprzedniej wersji swojego rodzica oraz uzyskać poprzednią wersję węzła który same reprezentują na podstawie identyfikatora. Jeżeli odpowiedni węzeł istnieje, zapisywana jest referencja do niego wewnątrz węzła oraz przywracane są odpowiednie dane (zapisany stan, poprzednie zależności funkcji) oraz podejmowane ewentualne działania np. w przypadku gdy zależności zapisane w poprzedniej wersji węzła różnią się od zależności nowego węzła efektu, uruchamiana jest funkcja sprzątająca oraz ponownie efekt. Jeżeli taki węzeł nie istnieje, oznacza to że węzeł nie ma odpowiednika w poprzedniej wersji drzewa oraz powinien zostać zainicjalizowany bez stanu początkowego, jak podczas pierwszej budowy drzewa. Do takiej sytuacji może dojść, kiedy dany komponent jest wewnątrz instrukcji warunkowej zależnej od wartości stanu.
+Po utworzeniu węzła tymczasowego, jego poddrzewo jest budowane w standardowy sposób, tzn. referencja na obecny węzeł jest ustawiana na węzeł tymczasowy oraz uruchamiana jest funkcja ciała. Następująco proces przebiega identycznie jak opisano w `Pierwszej budowie drzewa`, z tą różnicą że dodatkowo propagowana jest referencja do poprzednich wersji węzłów. To również jest prosty mechanizm, opierający się na lokalnej unikalności identyfikatorów. Pierwszy przebudowywany węzęł, ma ustawioną odpowiednią referencję na początku procesu przebudowywania, następnie podczas budowy jego dzieci, są one w stanie odczytać referencję do poprzedniej wersji swojego rodzica oraz uzyskać poprzednią wersję węzła który same reprezentują na podstawie identyfikatora. Jeżeli odpowiedni węzeł istnieje, zapisywana jest referencja do niego wewnątrz węzła, dając następującą strukturę podczas przebudowy (kolorem szarym oznaczone są referencje do poprzednich wersji odpowiednich węzłów):
+
+```mermaid
+graph TD
+    A((A))
+    B((B))
+    C((C))
+    D((D))
+    E((E))
+    F((F))
+    A'((A'))
+    B'((B'))
+    C'((C'))
+    D'((D'))
+    E'((E'))
+    F'((F'))
+
+subgraph Poprzednie poddrzewo
+    A --> B
+    A --> C
+    B --> D
+    B --> E
+    C --> F
+    end
+
+subgraph Nowe poddrzewo
+    A' --> B'
+    A' --> C'
+    B' --> D'
+    B' --> E'
+    C' --> F'
+end
+
+  A' ---> A
+  B' ---> B
+  C' ---> C
+  D' ---> D
+  E' ---> E
+  F' ---> F
+
+  style A' fill:#555
+  linkStyle 10,11,12,13,14,15 stroke:gray;
+```
+
+Po ustaleniu referencji przywracane są odpowiednie dane (zapisany stan, poprzednie zależności funkcji) oraz podejmowane ewentualne działania np. w przypadku gdy zależności zapisane w poprzedniej wersji węzła różnią się od zależności nowego węzła efektu, uruchamiana jest funkcja sprzątająca oraz ponownie efekt. Jeżeli taki węzeł nie istnieje, oznacza to że węzeł nie ma odpowiednika w poprzedniej wersji drzewa oraz powinien zostać zainicjalizowany bez stanu początkowego, jak podczas pierwszej budowy drzewa. Do takiej sytuacji może dojść, kiedy dany komponent jest wewnątrz instrukcji warunkowej zależnej od wartości stanu.
 
 Kolejną różnicą w stosunku do pierwszej budowy są komponenty czyste, które nie powinny być przebudowane, chyba że zmieniła się ich konfiguracja. Kiedy podczas procesu przebudowywania tworzony jest komponent oznaczony jako czysty, jego obiekt konfuguracyjny jest porównywany z obiektem konfiguracyjnym jego poprzedniej wersji (przez wartość). Jeżeli jego poprzednia wersja nie istnieje, lub konfiguracja zmieniła się w stosunku do poprzedniej wersji, jest on przebudowywany jak zwykły komponent. Jeżeli natomiast konfiguracja jest niezmieniona, lista dzieci jest kopiowana z poprzedniej wersji drzewa oraz aktualizowane są ich referencje wskazujące na węzeł rodzica. Dodatkowo, na widoku ustawiana jest flaga, mówiąca że został on przywrócony z poprzedniej wersji drzewa i może zostać pominięty podczas obliczania różnic pomiędzy nowym a startm drzewem w trakcie renderowania, a także kolejkowane są ewentualne aktualizacje stanu na potomkach czystego komponentu, zgodnie z opisem w `modyfikacji stanu`.
 
@@ -397,38 +441,3 @@ TODO:
 - suspense
 - renderowanie
 - dobrze by było wspomnieć po co są zależności w efekcie i podmienianie funkcji (closures)
-
-```mermaid
-graph TD
-    A((A))
-    B((B))
-    C((C))
-    D((D))
-    E((E))
-    F((F))
-
-subgraph Test
-    A --> B
-    A --> C
-    B --> D
-    B --> E
-    C --> F
-    end
-
-subgraph Test2
-    A' --> B'
-    A' --> C'
-    B' --> D'
-    B' --> E'
-    C' --> F'
-end
-
-  A ---> A'
-  B ---> B'
-  C ---> C'
-  D ---> D'
-  E ---> E'
-  F ---> F'
-
-    style A fill:#555
-```
