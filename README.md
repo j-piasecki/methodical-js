@@ -433,11 +433,139 @@ Kolejną różnicą w stosunku do pierwszej budowy są komponenty czyste, które
 
 Kiedy zbudowane jest całe nowe poddrzewo, renderowana jest różnica pomiędzy starym a nowo zbudowanym poddrzewem. Następnie lista dzieci węzła tymczasowego jest zapisywana w drzewie, w węźle który był przebudowywany oraz ich referencja wskazująca na rodzica zostaje zmodyfikowana tak żeby wskazywać na nowego rodzica zamiast na węzeł tymczasowy.
 
+### Renderowanie
+
+Renderowanie to proces odpowiedzialny za odzwierciedlanie zmian pomiędzy różnymi wersjami drzewa na faktyczny stan interfejsu użytkownika. Algorytm realizujący go, opiera się o założenie, że węzły w drzewie mogą być dodane, usunięte, lub zmodyfikowane. Nie jest dopuszczalna zamiana dwóch węzłów, taką operację można zastąpić przez usunięcie obu węzłów z drzewa, a następnie dodaniu ich ponownie w innej kolejności. Dzięki temu założeniu, można przyjąć że dana sekwencja węzłów na wybranym poziomie drzewa wystąpi w tej samej kolejności pomiędzy różnymi jego wersjami. Oczywiście dopuszczalne jest pojawienie się nowych węzłów pomiędzy nimi lub też zniknięcie niektórych w nowej wersji drzewa. Algorytm obliczający różnicę pomiędzy wersjami drzewa wygląda następująco:
+
+```python
+def diffTrees(old, new):
+  # indeks ostatniego węzła w starym drzewie, który został uzgodniony z pewnym węzłem w nowym drzewie
+  lastFoundIndex = 0
+  for child in new.children:
+    foundInOld = False
+    for i in range(lastFoundIndex, len(old.children)):
+      oldChild = old.children[i]
+      if oldChild.id == child.id:
+        # w przypadku uzgodnienia dwóch węzłów pomiędzy drzewami, wszystkie do tej pory nieuzgodnione węzły w starym drzewie muszą zostać usunięte
+        for j in range(lastFoundIndex, i):
+          # dropView rekurencyjnie usuwa całe poddrzewo
+          dropView(old.children[j])
+
+        # indeks, od którego zacznie się kolejne przeszukiwanie starego drzewa musi być przesunięty na pierwszy za nowo uzgodnionym węzłem żeby nie został on usunięty w kolejnych krokach
+        lastFoundIndex = i + 1
+        foundInOld = True
+
+        updateView(oldChild, child)
+        # jeżeli węzeł został uzgodniony z odpowiednikiem w starym drzewie, powinna zostać obliczona różnica pomiędzy ich poddrzewami, gdyż ich struktura mogła się zmienić
+        diffTrees(oldChild, child)
+        break
+
+    # jeżeli nie udało się uzgodnić nowego węzła, oznacza to że został on utworzony w tym cyklu
+    if not foundInOld:
+      # createView rekurencyjnie buduje całe poddrzewo
+      createView(child)
+
+  # dodatkowo należy usunąć wszystkie pozostałe węzły ze starego drzewa, które nie zostały uzgodnione gdyż nie mają swojego odpowiednika w nowym
+  for i in range(lastFoundIndex, len(old.children)):
+    dropView(old.children[i])
+```
+
+Łatwo zauważyć, że jest to efektywnie algorytm obliczania różnicy w sekwencji gdzie dopuszczalne są pojedyncze edycje (wstawianie, usuwanie, modyfikacja), zatem jest to problem analogiczny do obliczania odległości Levenshteina. Łatwo też zauważyć, że jego pesymistyczna złożoność czasowa (dla jednego poziomu w drzewie) wynosi `O(n*m)`, gdzie `n`, `m` to odległości odpowiednich sekwencji - jest to optymalne rozwiązanie tego problemu: https://arxiv.org/abs/1412.0348. Dodatkowo, do takiej sytuacji dochodzi kiedy żaden z węzłów ze starego drzewa nie pojawia się w nowym drzewie, co w kontekście tworzenia interfejsów użytkownika jest stosunkowo rzadkim zdarzeniem.
+
+Wszystkie operacje w powyższym algorytmie wykonywane są tylko dla węzłów odpowiadającym widokom, a odpowienie asercje oraz optymalizacje zostały pominięte w celu uproszczenia algorytmu. Jego działanie można zobrazować na następujących drzewach:
+
+```mermaid
+graph TD
+    A((A))
+    B((B))
+    C((C))
+    D((D))
+    E((E))
+    F((F))
+    A'((A'))
+    C'((C'))
+    E'((E'))
+    F'((F'))
+    G((G))
+    H((H))
+    I((I))
+
+subgraph Poprzednie poddrzewo
+    A --> B
+    A --> C
+    A --> D
+    A --> E
+    A --> F
+    end
+
+subgraph Nowe poddrzewo
+    A' --> C'
+    A' --> G
+    A' --> E'
+    A' --> F'
+    A' --> H
+    A' --> I
+end
+
+  style B fill:#a00
+  style D fill:#a00
+
+  style C fill:#00a
+  style E fill:#00a
+  style F fill:#00a
+  style C' fill:#00a
+  style E' fill:#00a
+  style F' fill:#00a
+
+  style G fill:#0a0
+  style H fill:#0a0
+  style I fill:#0a0
+```
+
+W powyższym przykładzie, relatywna kolejność węzłów `C`, `E`, `F` nie zmienia się pomiędzy drzewami zatem ich widoki mogą zostać zaktualizowane. Węzły `B` oraz `D` nie pojawiają się w nowym drzewie, zatem ich widoki zostaną usunięte, natomiast węzły `G`, `H`, `I` nie występowały w starym drzewie, dlatego odpowiadające im widoki zostaną utworzone. Możemy też rozważyć przypadek, gdzie kolejność węzłów zmienia się pomiędzy wersjami drzewa:
+
+```mermaid
+graph TD
+    A((A))
+    B((B))
+    C((C))
+    D((D))
+    A'((A'))
+    C'((C'))
+    B'((B'))
+    D'((D'))
+
+subgraph Poprzednie poddrzewo
+    A --> B
+    A --> C
+    A --> D
+    end
+
+subgraph Nowe poddrzewo
+    A' --> D'
+    A' --> C'
+    A' --> B'
+end
+
+  style B fill:#a00
+  style C fill:#a00
+
+  style D fill:#00a
+  style D' fill:#00a
+
+  style C' fill:#0a0
+  style B' fill:#0a0
+```
+
+W takiej sytacji, widok odpowiadający węzłowi `D` zostanie zaktualizowany, natomiast widoki odpowiadające węzłom `B` i `C` zostaną usunięte i utworzone ponownie.
+
+Kolejnym problemem, jest aktualizacja drzewa DOM na podstawie obliczonych różnic pomiędzy wewnętrznymi reprezentacjami drzewowymi interfejsu.
+
 ---
 
 TODO:
 
+- aktualizacje DOM
 - ambient
 - suspense
-- renderowanie
 - dobrze by było wspomnieć po co są zależności w efekcie i podmienianie funkcji (closures)
