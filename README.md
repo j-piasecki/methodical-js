@@ -559,13 +559,21 @@ end
 
 W takiej sytacji, widok odpowiadający węzłowi `D` zostanie zaktualizowany, natomiast widoki odpowiadające węzłom `B` i `C` zostaną usunięte i utworzone ponownie.
 
-Kolejnym problemem, jest aktualizacja drzewa DOM na podstawie obliczonych różnic pomiędzy wewnętrznymi reprezentacjami drzewowymi interfejsu.
+Kolejnym problemem jest aktualizacja drzewa DOM na podstawie obliczonych różnic pomiędzy wewnętrznymi reprezentacjami drzewowymi interfejsu. W tym przypadku mamy 2 ograniczenia:
+- API udostępniane przez przeglądarkę do modyfikacji drzewa DOM - dostępne są metody `appendChild`, która dodaje widok jako swoje ostatnie dziecko oraz `insertBefore`, która dodaje widok bezpośrednio przed widokiem przekazanym jako drugi parametr (drugi parametr musi być dzieckiem tego węzła do którego widok jest dodawany)
+- Fakt, że nie każdy węzeł odpowiadający za widok, ma odpowiadający mu element w drzewie DOM - niektóre węzły pełnią funkcje wyłącznie logiczne i nie mają bezpośredniego wpływu na wyświetlany interfejs
+
+Ze względu na powyższe ograniczenia, dodanie widoku do drzewa DOM wymaga przeszukiwania drzewa roboczego w poszukiwaniu następnika posiadającego odpowiadający mu węzeł w drzewie DOM, lub poprzednika, również z odpowiadającym mu węzłem w DOM. Algorytmy wyszukujące odpowienie węzły w drzewie mają dosyć prostą implementację, jednak warto zwrócić uwagę na dwa szczegóły implementacyjne:
+
+1. Podczas przeszukiwania, rozważane są tylko węzły reprezentujące widoki (tzn. pomijane są węzły stanu, efektu, itd.), a żeby węzeł mógł zostać uznany za poprzednika lub następnika, musi on posiadać referencję do węzła DOM
+2. Szukanie odpowiedniego węzła następuje w poddrzewie pierwszego przodka posiadającego referencję do węzła DOM - ten węzeł będzie rodzicem właśnie utworzonego elementu HTML. W związku z tym, przeszukiwanie zostaje przerwane w momencie napotkania wspomnianego przodka i uznaje się że odpowiedni węzeł nie istnieje.
+
+W ogólnym przypadku, wyszukiwanie poprzednika jest zbędne gdyż informacja o następniku jest wystarczająca w celu aktualizacji drzewa DOM - jeżeli następnik nie istnieje, możemy dodać nowy element jako ostatnie dziecko, natomiast jeżeli istnieje, nowy element powinien zostać wstawiony przed swoim następnikiem. Jest to jednak kosztowna operacja w sytuacji gdy budowane jest nowe poddrzewo - żaden z rozważanych węzłów nie posiada referencji do drzewa DOM, gdyż nie zdążyły zostać zainicjalizowane zatem duża część poddrzewa zostanie odwiedzona przed zwróceniem wyniku. W takiej sytuacji, optymalne jest wyszukanie poprzednika, który w większości przypadków będzie bezpośrednim rodzeństwem rozważanego węzła (i jego referencja do drzewa DOM będzie zainicjalizowana, ponieważ inicjalizacja zachodzi w kolejności DFS). Jeżeli poprzednik istnieje i odpowiedni węzeł DOM jest ostatnim węzłem w swoim rodzicu, widok może zostać dodany jako ostatnie dziecko. Decyzja o tym, które podejście powinno zostać zastosowane jest podejmowana na podstawie flag optymalizacyjnych, które są ustawiane w trakcie przebudowy drzewa. Jeżeli dane poddrzewo zostało właśnie utworzone, podejmowana jest próba znaleznienia poprzednika i dopiero kiedy to się nie powiedzie, wyszukiwany jest następnik. W przeciwnym razie następnik wyszukiwany jest bezpośrednio. W przypadku gdy nie istnieje ani poprzednik, ani następnik, węzeł będzie jedynym elementem w drzewie DOM, zatem może być dodany jako ostatnie (pierwsze) dziecko.
 
 ---
 
 TODO:
 
-- aktualizacje DOM
 - ambient
 - suspense
 - dobrze by było wspomnieć po co są zależności w efekcie i podmienianie funkcji (closures)
