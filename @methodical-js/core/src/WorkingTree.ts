@@ -72,9 +72,9 @@ export class WorkingTree {
     this.updateQueued = false
 
     for (const path of pathsToUpdate) {
-      const nodeToUpdate = WorkingTree.root.getNodeFromPath(path) as ViewNode
+      const nodeToUpdate = WorkingTree.root.getNodeFromPath(path) as ViewNode | undefined
 
-      if (nodeToUpdate !== null) {
+      if (nodeToUpdate !== undefined) {
         const rebuildContext = new RebuildingNode(nodeToUpdate)
         // set previous context to the node that is being rebuilt so that remembered values can be restored
         rebuildContext.predecessorNode = nodeToUpdate
