@@ -133,6 +133,8 @@ Oczywiście, możliwe jest też tworzenie własnych funkcji odpowiadających wym
 - `createAmbient<T>(key: string): Ambient<T>` - Pozwala stworzyć komponent, który udostępnia swoim potomkom dodatkowe informacje które można odczytać na dowolnym poziomie w drzewie. Zwraca funkcję, która w swoim obiekcie konfiguracyjnym, przyjmuje pole `value: T` i zmiany tej wartości powodują przebudowanie wszystkich potomków, którzy ją odczytują. Szczególne znaczenie ma to w połączeniu z czystymi komponentami, które przerywają przebudowywanie poddrzewa. W takim przypadku, przebudowane zostaną tylko komponenty, które odczytują wartość.
 - `readAmbient<T>(Ambient<T>): T` - Pozwala na odczytanie wartości udostępnianej przez przodka typu `Ambient`. Odczytanie wartości powoduje, że dany węzeł zaczyna nasłuchiwać na zmiany odczytanej wartości i jest przebudowaywany kiedy taka nastąpi.
 
+Każda z funkcji przyjmujących zależności, optymalizuje przebudowywanie węzłów opierając się na domknięciach (closures). Jeżeli żadna z wartości używanych przez odpowiednią funkcję nie zmieniła się pomiędzy kolejnymi wywołaniami, nie ma potrzeby wywoływania jej ponownie (lub aktualizowania węzła w drzewie roboczym w przypadku obsługi zdarzeń) gdyż jej wynik nie zmieni się po ponownym jej wywołaniu.
+
 ### Nawigacja
 
 Framework udostępnia dwa komponenty do budowania nawigacji: `Navigator` i `Route`. Oba komponenty przyjmują jako argumenty ścieżkę oraz funkcję budującą ich ciało. Ścieżka to wzór adresów, które powinny być dopasowane do danego komponentu. Ścieżka może być statyczna, ale może też być parametryzowana przez użycie symbolu `:`, np. `/user/:userId`. Wspomniane komponenty różnią się one zachowaniem: komponenty typu `Navigator` można zagnieżdzać, budując w ten sposób coraz bardziej złożoną nawigację, natomiast komponenty typu `Route` stanowią liście w kontekście nawigacji - nie mogą zawierać innych komponentów nawigacyjnych w swoich poddrzewach. Najprościej to zachowanie prezentuje prosty przykład:
@@ -560,6 +562,7 @@ end
 W takiej sytacji, widok odpowiadający węzłowi `D` zostanie zaktualizowany, natomiast widoki odpowiadające węzłom `B` i `C` zostaną usunięte i utworzone ponownie.
 
 Kolejnym problemem jest aktualizacja drzewa DOM na podstawie obliczonych różnic pomiędzy wewnętrznymi reprezentacjami drzewowymi interfejsu. W tym przypadku mamy 2 ograniczenia:
+
 - API udostępniane przez przeglądarkę do modyfikacji drzewa DOM - dostępne są metody `appendChild`, która dodaje widok jako swoje ostatnie dziecko oraz `insertBefore`, która dodaje widok bezpośrednio przed widokiem przekazanym jako drugi parametr (drugi parametr musi być dzieckiem tego węzła do którego widok jest dodawany)
 - Fakt, że nie każdy węzeł odpowiadający za widok, ma odpowiadający mu element w drzewie DOM - niektóre węzły pełnią funkcje wyłącznie logiczne i nie mają bezpośredniego wpływu na wyświetlany interfejs
 
@@ -570,10 +573,15 @@ Ze względu na powyższe ograniczenia, dodanie widoku do drzewa DOM wymaga przes
 
 W ogólnym przypadku, wyszukiwanie poprzednika jest zbędne gdyż informacja o następniku jest wystarczająca w celu aktualizacji drzewa DOM - jeżeli następnik nie istnieje, możemy dodać nowy element jako ostatnie dziecko, natomiast jeżeli istnieje, nowy element powinien zostać wstawiony przed swoim następnikiem. Jest to jednak kosztowna operacja w sytuacji gdy budowane jest nowe poddrzewo - żaden z rozważanych węzłów nie posiada referencji do drzewa DOM, gdyż nie zdążyły zostać zainicjalizowane zatem duża część poddrzewa zostanie odwiedzona przed zwróceniem wyniku. W takiej sytuacji, optymalne jest wyszukanie poprzednika, który w większości przypadków będzie bezpośrednim rodzeństwem rozważanego węzła (i jego referencja do drzewa DOM będzie zainicjalizowana, ponieważ inicjalizacja zachodzi w kolejności DFS). Jeżeli poprzednik istnieje i odpowiedni węzeł DOM jest ostatnim węzłem w swoim rodzicu, widok może zostać dodany jako ostatnie dziecko. Decyzja o tym, które podejście powinno zostać zastosowane jest podejmowana na podstawie flag optymalizacyjnych, które są ustawiane w trakcie przebudowy drzewa. Jeżeli dane poddrzewo zostało właśnie utworzone, podejmowana jest próba znaleznienia poprzednika i dopiero kiedy to się nie powiedzie, wyszukiwany jest następnik. W przeciwnym razie następnik wyszukiwany jest bezpośrednio. W przypadku gdy nie istnieje ani poprzednik, ani następnik, węzeł będzie jedynym elementem w drzewie DOM, zatem może być dodany jako ostatnie (pierwsze) dziecko.
 
----
+### Suspense
 
-TODO:
+Suspense to mechanizm, pozwalający na przerwanie renderowania danego poddrzewa na czas działania operacji asynchronicznej, od wyniku której może zależeć jego struktura. W czasie kiedy renderowanie poddrzewa jest wstrzymane, renderowany jest opcjonalny komponent zastępczy (lub nic, w przypadku gdy taki nie istnieje). Kiedy odpowiednia funckja asynchroniczna zakończy swoje działanie, poddrzewo jest aktualizowane oraz renderowany jest docelowy komponent, który ma w tym czasie dostęp do wyniku zwróconego przez zakończoną operację. `SuspenseBoundary` to komponent wyznaczający granicę poddrzewa, którego renderowanie powinno zostać przerwane w przypadku wstrzymania. Implementacja tego systemu wykorzystuje dwie cechy języka JavaScript:
 
-- ambient
-- suspense
-- dobrze by było wspomnieć po co są zależności w efekcie i podmienianie funkcji (closures)
+- Każda funkcja asynchroniczna zwraca obiekt typu `Promise`
+- Wyrażenie `throw` akceptuje dowoną poprawną wartość
+
+Dzięki temu, wywołanie funkcja `suspend` jest równoznaczna z przerwaniem wykonywania kodu i rzuceniem obiektu `Promise` zwróconego przez funkcję będącą jej argumentem. Następnie `SuspenseBoundary` wykorzystuje konstrukcję `try...catch` w celu obsłużenia tej sytuacji. Jeżeli złapany błąd jest typu `Promise`, dodawany jest obserwator na zakończenie jego działania, który kolejkuje aktualizację na odpowiedni węzeł w drzewie roboczym.
+
+### Ambient
+
+Ambient pozwala na udostępnianie danych dla całego poddrzewa bez bezpośredniego przekazywania ich w obiektach konfiguracyjnych, co w połączeniu z czystymi komponentami daje możliwość optymalizacji części drzew, które powinny zostać przebudowane podczas aktualizacji. Węzeł `Ambient` udostępnia możliwość nasłuchiwania na zmiany udostępnianej przez niego wartości, która jest wykorzystywana przez funkcję `readAmbient`. Podczas pierwszego jej uruchomienia, zaczyna ona obserwować na zmiany wartości pierwszego przodka typu `Ambient` o odpowiednim kluczu. Utworzony obserwator jest niszczony, kiedy wywołanie `readAmbient` znika z konstrukcji drzewa roboczego. Kiedy obserwowana wartość zostaje zmieniona, kolejkowana jest dodatkowa aktualizacja na nasłuchujący węzeł, który następnie jest przebudowywany z dostępem do nowej wartości. Jest to szczególnie przydane narzędzie w przypadku danych, które są wymagane w dużej części poddrzewa, lub całym poddrzewie i zastępuje przekazywanie ich wprost (np. informacja o języku aplikacji, wybranym motywie kolorystycznym). Umożliwia też sprawdzanie struktury drzewa, np. lista może wyrenderować swoje dzieci w odpowiednim komponencie `Ambient`, następnie elementy listy mogą w łatwy sposób upewnić się czy są potomkami listy za pomocą funkcji `readAmbient`, podobne zachowanie może być pożądane w przypadku formularzy, tabel oraz innych komponentów wymagających konkretnej hierarchii.
