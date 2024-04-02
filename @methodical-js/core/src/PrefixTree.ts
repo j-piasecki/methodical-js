@@ -49,25 +49,25 @@ export class PrefixTree {
       return []
     }
 
-    return this.getNodePaths(this.root)
+    return this.getNodePaths(this.root, [])
   }
 
-  private getNodePaths(node: Node): Id[][] {
+  private getNodePaths(node: Node, prefix: Id[]): Id[][] {
     if (node.last || node.children.size === 0) {
-      return [[node.value]]
+      return [[...prefix, node.value]]
     }
 
     const result: Id[][] = []
 
+    prefix.push(node.value)
     for (const [_, child] of node.children) {
-      const childPaths = this.getNodePaths(child)
+      const childPaths = this.getNodePaths(child, prefix)
 
-      childPaths.forEach((path) => {
-        path.unshift(node.value)
-
+      for (const path of childPaths) {
         result.push(path)
-      })
+      }
     }
+    prefix.pop()
 
     return result
   }

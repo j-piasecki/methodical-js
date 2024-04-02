@@ -20,11 +20,11 @@ export class SuspendNode<T> extends WorkingNode {
 
     let parent = this.parent
     while (parent !== undefined && parent instanceof SuspenseBoundaryNode === false) {
-      path.unshift(parent.id)
+      path.push(parent.id)
       parent = parent.parent
     }
 
-    return path.join('/')
+    return path.reverse().join('/')
   }
 
   protected initialize(fun: SuspendFunction<T>, dependencies: unknown[]) {

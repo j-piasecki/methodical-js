@@ -17,11 +17,11 @@ export class WorkingNode {
 
     let parent = this.parent
     while (parent !== undefined) {
-      path.unshift(parent.id)
+      path.push(parent.id)
       parent = parent.parent
     }
 
-    return path
+    return path.reverse()
   }
 
   public findPredecessorNode(): typeof this | undefined {
