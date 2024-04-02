@@ -10,6 +10,11 @@ export { EventNodeManager } from './EventNodeManager.js'
 export { ViewNodeManager } from './ViewNodeManager.js'
 export { Tracing } from './Tracing.js'
 
+export {
+  findParentViewReferenceNode,
+  findPredecessorViewReferenceNode,
+  findSuccessorViewReferenceNode,
+} from './treeTraversal.js'
 export { createBoundary } from './createBoundary.js'
 
 export {

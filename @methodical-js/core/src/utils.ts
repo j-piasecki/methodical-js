@@ -1,6 +1,6 @@
-import { NodeType } from './NodeType'
-import { ViewNode } from './ViewNode'
-import { WorkingNode } from './WorkingNode'
+import { NodeType } from './NodeType.js'
+import { ViewNode } from './ViewNode.js'
+import { WorkingNode } from './WorkingNode.js'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function deepEqual(obj1: any, obj2: any) {
