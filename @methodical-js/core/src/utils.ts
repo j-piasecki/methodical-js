@@ -1,3 +1,7 @@
+import { NodeType } from './NodeType'
+import { ViewNode } from './ViewNode'
+import { WorkingNode } from './WorkingNode'
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function deepEqual(obj1: any, obj2: any) {
   if (obj1 === obj2) {
@@ -56,4 +60,10 @@ export function compareDependencies(first: unknown[], second: unknown[]) {
   }
 
   return areDependenciesEqual
+}
+
+export function isViewNode(node: WorkingNode): node is ViewNode {
+  return (
+    node.type === NodeType.View || node.type === NodeType.Rebuilding || node.type === NodeType.Root
+  )
 }

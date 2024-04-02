@@ -88,10 +88,7 @@ export class WorkingTree {
         // move children from the rebuilding node to the node that is being rebuilt
         // we also need to reassign the parent of the direct children so it points
         // to the node that is being rebuilt
-        nodeToUpdate.children = rebuildContext.children
-        for (const child of nodeToUpdate.children) {
-          child.parent = nodeToUpdate
-        }
+        nodeToUpdate.setChildren(rebuildContext.children)
       }
     }
   }
@@ -149,7 +146,7 @@ export class WorkingTree {
     // propagate predecessor during rebuild, so that remembered values can be restored in children and for
     // optimization purposes, so that we can skip updating the view if the config is the same and the view is pure
     view.predecessorNode = view.findPredecessorNode()
-    currentView.children.push(view)
+    currentView.addChild(view)
 
     if (
       view.config.pure !== true ||
@@ -171,10 +168,7 @@ export class WorkingTree {
     } else {
       // TODO: this will break when the body function changes but the config stays the same, TBD whether this is a problem
       // if the config is the same, we can reuse the children from the predecessor
-      view.children = view.predecessorNode.children
-      for (const child of view.children) {
-        child.parent = view
-      }
+      view.setChildren(view.predecessorNode.children)
 
       // if there was an update requested on one of the descendants, we need to queue the update on that view
       // since pure component breaks rendering here
@@ -220,7 +214,7 @@ export class WorkingTree {
     // optimization purposes, so that we can skip updating the view if the config is the same and the view is pure
     node.predecessorNode = node.findPredecessorNode()
     node.tryRestore()
-    currentView.children.push(node)
+    currentView.addChild(node)
 
     if (node.body !== undefined) {
       WorkingTree.withContext(node, node.body)
@@ -243,7 +237,7 @@ export class WorkingTree {
     const node = new SuspendNode(currentView._nextActionId++)
 
     node.parent = currentView
-    currentView.children.push(node)
+    currentView.addChild(node)
 
     node.initializeOrRestore(fun, dependencies)
 
@@ -261,7 +255,7 @@ export class WorkingTree {
     const node = new DeferNode(currentView._nextActionId++)
 
     node.parent = currentView
-    currentView.children.push(node)
+    currentView.addChild(node)
 
     node.initializeOrRestore(fun, dependencies)
 
@@ -285,7 +279,7 @@ export class WorkingTree {
     node.eventManager = eventManager
 
     node.parent = currentView
-    currentView.children.push(node)
+    currentView.addChild(node)
 
     node.initializeOrRestore(handler, dependencies)
 
@@ -303,7 +297,7 @@ export class WorkingTree {
     const node = new RememberNode<T>(currentView._nextActionId++)
 
     node.parent = currentView
-    currentView.children.push(node)
+    currentView.addChild(node)
 
     node.initializeOrRestore(initialValue)
 
@@ -321,7 +315,7 @@ export class WorkingTree {
     const node = new EffectNode(currentView._nextActionId++)
 
     node.parent = currentView
-    currentView.children.push(node)
+    currentView.addChild(node)
 
     node.initializeOrRestore(effect, dependencies)
 

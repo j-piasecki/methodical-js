@@ -3,10 +3,7 @@ import { NodeType } from './NodeType.js'
 import { Tracing } from './Tracing.js'
 import { ViewNode } from './ViewNode.js'
 import { WorkingNode } from './WorkingNode.js'
-
-function isViewNode(node: WorkingNode): node is ViewNode {
-  return node.type === NodeType.View
-}
+import { isViewNode } from './utils.js'
 
 function isEventNode(node: WorkingNode): node is EventNode<unknown, unknown> {
   return node.type === NodeType.Event

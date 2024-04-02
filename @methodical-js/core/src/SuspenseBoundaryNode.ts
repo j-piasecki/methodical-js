@@ -33,7 +33,7 @@ export class SuspenseBoundaryNode extends ViewNode {
           const dependencies = error['_methodical_dependencies']
           this.thenables[path] = error
 
-          this.children = []
+          this.setChildren([])
           this.body = this.fallbackFun
           WorkingTree.withContext(this, this.fallbackFun)
 
