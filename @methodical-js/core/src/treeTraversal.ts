@@ -54,7 +54,7 @@ export function findSuccessorViewReferenceNode(
   let shouldSkipNode = true
   for (const child of parent.children) {
     if (shouldSkipNode) {
-      if (child.id === node.id) {
+      if (child === node) {
         shouldSkipNode = false
       }
       continue

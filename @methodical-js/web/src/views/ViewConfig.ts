@@ -50,7 +50,7 @@ export function applyUpdatedConfig<T extends ViewConfig>(
       Object.assign(view.style, newConfig.style)
     } else {
       // @ts-expect-error assign config properties to view
-      view[key] = config[key]
+      view[key] = newConfig[key]
     }
   }
 
