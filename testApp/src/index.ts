@@ -1,4 +1,4 @@
-import { BaseConfig, SuspenseBoundary, createBoundary, defer, suspend } from '@methodical-js/core'
+import { BaseConfig, createBoundary } from '@methodical-js/core'
 import Methodical, {
   remember,
   Div,
@@ -11,6 +11,7 @@ import Methodical, {
 import { Tracing } from '@methodical-js/core'
 import { Home } from './home'
 import { Suspense } from './suspense'
+import { StressTest } from './stressTest'
 
 const saveTemplateAsFile = (filename: string, dataObjToWrite: any) => {
   const blob = new Blob([JSON.stringify(dataObjToWrite)], { type: 'text/json' })
@@ -106,6 +107,11 @@ Div({ id: 'root', style: { display: 'flex', flexDirection: 'row' } }, () => {
         text: 'Suspense',
         onClick: () => navigation.navigate('/suspense'),
       })
+      NavButton({
+        id: 'stresstest',
+        text: 'StressTest',
+        onClick: () => navigation.navigate('/stress'),
+      })
     }
   )
 
@@ -113,6 +119,7 @@ Div({ id: 'root', style: { display: 'flex', flexDirection: 'row' } }, () => {
     Navigator('/', () => {
       Route('/', Home)
       Route('/suspense', Suspense)
+      Route('/stress', StressTest)
     })
   })
 })
