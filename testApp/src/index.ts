@@ -14,6 +14,18 @@ import { Suspense } from './suspense'
 import { StressTest } from './stressTest'
 import { Lists } from './lists'
 
+interface Example {
+  name: string
+  component: () => void
+}
+
+const EXAMPLES: Example[] = [
+  { name: 'Home', component: Home },
+  { name: 'Suspense', component: Suspense },
+  { name: 'StressTest', component: StressTest },
+  { name: 'Lists', component: Lists },
+]
+
 const saveTemplateAsFile = (filename: string, dataObjToWrite: any) => {
   const blob = new Blob([JSON.stringify(dataObjToWrite)], { type: 'text/json' })
   const link = document.createElement('a')
@@ -102,31 +114,30 @@ Div({ id: 'root', style: { display: 'flex', flexDirection: 'row' } }, () => {
     },
     () => {
       TracingButton({ id: 'tracing' })
-      NavButton({ id: 'home', text: 'Home', onClick: () => navigation.navigate('/') })
-      NavButton({
-        id: 'suspense',
-        text: 'Suspense',
-        onClick: () => navigation.navigate('/suspense'),
-      })
-      NavButton({
-        id: 'stresstest',
-        text: 'StressTest',
-        onClick: () => navigation.navigate('/stress'),
-      })
-      NavButton({
-        id: 'lists',
-        text: 'Lists',
-        onClick: () => navigation.navigate('/lists'),
-      })
+
+      for (const example of EXAMPLES) {
+        NavButton({
+          id: example.name.toLowerCase(),
+          text: example.name,
+          onClick: () => navigation.navigate(`/${example.name.toLowerCase()}`),
+        })
+      }
     }
   )
 
   Div({ id: 'content', style: { flexGrow: '1' } }, () => {
     Navigator('/', () => {
-      Route('/', Home)
-      Route('/suspense', Suspense)
-      Route('/stress', StressTest)
-      Route('/lists', Lists)
+      Route('/', () => {
+        Text({
+          id: 'welcome',
+          value:
+            'Welcome to the Methodical Web Test App! Select an example from the list on the left.',
+        })
+      })
+
+      for (const example of EXAMPLES) {
+        Route(`/${example.name.toLowerCase()}`, example.component)
+      }
     })
   })
 })
