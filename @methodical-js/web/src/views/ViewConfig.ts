@@ -12,6 +12,16 @@ export interface ViewConfig extends BaseConfig {
   style?: Partial<CSSStyleDeclaration>
 }
 
+export type CustomHTMLConfig<T> = ViewConfig & {
+  [K in keyof T as string extends K
+    ? never
+    : K extends `on${string}`
+    ? never
+    : K extends 'style'
+    ? never
+    : K]?: T[K]
+}
+
 const defaultBlacklist: (keyof ViewConfig)[] = ['__viewType', 'id', 'pure']
 
 export function applyInitialConfig<T extends ViewConfig>(

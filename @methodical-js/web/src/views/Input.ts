@@ -1,14 +1,8 @@
 import { WorkingTree, ViewNode, ViewNodeManager } from '@methodical-js/core'
-import { ViewConfig, applyInitialConfig, applyUpdatedConfig } from './ViewConfig.js'
+import { CustomHTMLConfig, applyInitialConfig, applyUpdatedConfig } from './ViewConfig.js'
 import { insertNodeViewIntoDOM } from './insertNodeViewIntoDOM.js'
 
-type InputConfig = ViewConfig & {
-  [K in keyof HTMLInputElement as string extends K
-    ? never
-    : K extends `on${string}`
-    ? never
-    : K]?: HTMLInputElement[K]
-}
+type InputConfig = CustomHTMLConfig<HTMLInputElement>
 
 const viewManager: ViewNodeManager = {
   createView(node: ViewNode) {

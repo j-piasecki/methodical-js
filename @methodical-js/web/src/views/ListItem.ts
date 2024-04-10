@@ -2,11 +2,11 @@ import { WorkingTree, ViewNode, ViewNodeManager } from '@methodical-js/core'
 import { CustomHTMLConfig, applyInitialConfig, applyUpdatedConfig } from './ViewConfig.js'
 import { insertNodeViewIntoDOM } from './insertNodeViewIntoDOM.js'
 
-type DivConfig = CustomHTMLConfig<HTMLDivElement>
+type ListItemConfig = CustomHTMLConfig<HTMLLIElement>
 
 const viewManager: ViewNodeManager = {
   createView(node: ViewNode) {
-    const view = document.createElement('div')
+    const view = document.createElement('li')
 
     applyInitialConfig(view, node.config)
 
@@ -20,7 +20,7 @@ const viewManager: ViewNodeManager = {
   },
 
   updateView(oldNode: ViewNode, newNode: ViewNode) {
-    const view = newNode.viewReference as HTMLDivElement | undefined
+    const view = newNode.viewReference as HTMLLIElement | undefined
     if (view === undefined) {
       return
     }
@@ -29,8 +29,8 @@ const viewManager: ViewNodeManager = {
   },
 }
 
-export const Div = (config: DivConfig, body?: () => void) => {
-  config.__viewType = 'div'
+export const ListItem = (config: ListItemConfig, body?: () => void) => {
+  config.__viewType = 'li'
 
   const view = WorkingTree.createViewNode(config, viewManager, body)
   return view

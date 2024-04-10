@@ -12,6 +12,7 @@ import { Tracing } from '@methodical-js/core'
 import { Home } from './home'
 import { Suspense } from './suspense'
 import { StressTest } from './stressTest'
+import { Lists } from './lists'
 
 const saveTemplateAsFile = (filename: string, dataObjToWrite: any) => {
   const blob = new Blob([JSON.stringify(dataObjToWrite)], { type: 'text/json' })
@@ -112,6 +113,11 @@ Div({ id: 'root', style: { display: 'flex', flexDirection: 'row' } }, () => {
         text: 'StressTest',
         onClick: () => navigation.navigate('/stress'),
       })
+      NavButton({
+        id: 'lists',
+        text: 'Lists',
+        onClick: () => navigation.navigate('/lists'),
+      })
     }
   )
 
@@ -120,6 +126,7 @@ Div({ id: 'root', style: { display: 'flex', flexDirection: 'row' } }, () => {
       Route('/', Home)
       Route('/suspense', Suspense)
       Route('/stress', StressTest)
+      Route('/lists', Lists)
     })
   })
 })
