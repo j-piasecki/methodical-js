@@ -13,6 +13,7 @@ import { Home } from './home'
 import { Suspense } from './suspense'
 import { StressTest } from './stressTest'
 import { Lists } from './lists'
+import { CounterExample } from './counter'
 
 interface Example {
   name: string
@@ -24,6 +25,7 @@ const EXAMPLES: Example[] = [
   { name: 'Suspense', component: Suspense },
   { name: 'StressTest', component: StressTest },
   { name: 'Lists', component: Lists },
+  { name: 'Counter', component: CounterExample },
 ]
 
 const saveTemplateAsFile = (filename: string, dataObjToWrite: any) => {
