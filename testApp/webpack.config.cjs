@@ -14,10 +14,19 @@ module.exports = {
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
   },
+  devServer: {
+    static: './dist',
+    port: 9000,
+    historyApiFallback: {
+      index: 'index.html',
+      rewrites: [
+        { from: /.*\/bundle.js/, to: '/bundle.js' }
+      ]
+    }
+  },
   output: {
     filename: 'bundle.js',
     path: path.resolve(__dirname, 'dist'),
   },
   mode: 'development',
-  watch: true,
 }

@@ -1,7 +1,7 @@
 import Methodical from '../index'
 import { WorkingTree } from '@methodical-js/core'
 
-test('Check that the root view reference is set correctly', () => {
+test('root view reference should be set correctly after initialization', () => {
   const dummyRoot = document.createElement('div')
 
   Methodical.init(dummyRoot)

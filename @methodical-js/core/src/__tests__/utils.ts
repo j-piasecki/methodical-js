@@ -1,13 +1,5 @@
+import { EventNodeManager } from '../EventNodeManager'
 import { ViewNode, ViewNodeManager, WorkingTree, BaseConfig } from '../index'
-
-export const remember = <T>(value: T) => {
-  const rememberedNode = WorkingTree.createRememberNode(value)
-  return rememberedNode.value
-}
-
-export const sideEffect = (effect: () => void, ...dependencies: unknown[]) => {
-  return WorkingTree.createEffectNode(effect, dependencies)
-}
 
 export const createViewManager = ({
   createView,
@@ -25,8 +17,28 @@ export const createViewManager = ({
   }
 }
 
+export const createEventManager = ({
+  registerHandler,
+  unregisterHandler,
+  updateHandler,
+}: {
+  registerHandler?: (target?: number) => void
+  unregisterHandler?: (target?: number) => void
+  updateHandler?: (target?: number) => void
+}): EventNodeManager<number> => {
+  return {
+    registerHandler: registerHandler ?? (() => {}),
+    unregisterHandler: unregisterHandler ?? (() => {}),
+    updateHandler: updateHandler ?? (() => {}),
+  }
+}
+
+interface ViewConfig extends BaseConfig {
+  mockProp?: number
+}
+
 export const createViewFunction = (viewManager: ViewNodeManager) => {
-  return (config: BaseConfig, body?: () => void) => {
+  return (config: ViewConfig, body?: () => void) => {
     const view = WorkingTree.createViewNode(config, viewManager, body)
     return view
   }

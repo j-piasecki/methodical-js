@@ -1,14 +1,5 @@
 import { WorkingTree } from '@methodical-js/core'
 
-export const remember = <T>(value: T) => {
-  const rememberedNode = WorkingTree.createRememberNode(value)
-  return rememberedNode.value
-}
-
-export const sideEffect = (effect: () => void, ...dependencies: unknown[]) => {
-  return WorkingTree.createEffectNode(effect, dependencies)
-}
-
 const Methodical = {
   init: (rootView: HTMLElement) => {
     WorkingTree.setRootViewReference(rootView)
@@ -25,4 +16,23 @@ const Methodical = {
 
 export default Methodical
 
-export { Div } from './Div.js'
+export {
+  remember,
+  sideEffect,
+  defer,
+  suspend,
+  SuspenseBoundary,
+  memoize,
+} from '@methodical-js/core'
+export { on } from './on.js'
+export { Div } from './views/Div.js'
+export { Text } from './views/Text.js'
+export { Input } from './views/Input.js'
+export { Button } from './views/Button.js'
+export { OrderedList } from './views/OrderedList.js'
+export { UnorderedList } from './views/UnorderedList.js'
+export { ListItem } from './views/ListItem.js'
+
+export { getNavigation } from './navigation/navigation.js'
+export { Navigator } from './navigation/Navigator.js'
+export { Route } from './navigation/Route.js'

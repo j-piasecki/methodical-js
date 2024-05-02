@@ -5,15 +5,16 @@
   "private": true,
   "scripts": {
     "build": "yarn tsc",
-    "start": "webpack",
+    "start": "webpack serve --open",
     "lint": "yarn eslint --ext .ts src/ && yarn prettier --check src/",
     "format": "prettier --write --list-different src/"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "devDependencies": {
+  "dependencies": {
     "webpack": "^5.89.0",
-    "webpack-cli": "^5.1.4"
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.0.2"
   }
 }

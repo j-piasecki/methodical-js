@@ -1,4 +1,5 @@
 import { NodeType } from './NodeType.js'
+import type { ViewNode } from './ViewNode.js'
 
 export class WorkingNode {
   public id: string | number
@@ -16,11 +17,22 @@ export class WorkingNode {
 
     let parent = this.parent
     while (parent !== undefined) {
-      path.unshift(parent.id)
+      path.push(parent.id)
       parent = parent.parent
     }
 
-    return path
+    return path.reverse()
+  }
+
+  public findPredecessorNode(): typeof this | undefined {
+    // only view nodes can have children
+    const currentView = this.parent as ViewNode
+
+    if (currentView.predecessorNode !== undefined) {
+      return currentView.predecessorNode.getNodeFromPath([this.id]) as typeof this | undefined
+    }
+
+    return undefined
   }
 
   public toString() {
@@ -29,8 +41,12 @@ export class WorkingNode {
       (k, v) => {
         if (k === 'parent' || k === '_context') {
           return v?.type === NodeType.Rebuilding ? `Rebuilding(${v?.id})` : v?.id
-        } else if (k === 'previousContext') {
-          return v !== undefined
+        } else if (k === 'predecessorNode') {
+          if (v === undefined) {
+            return false
+          } else {
+            return `true, ${v.id}`
+          }
         }
 
         return v

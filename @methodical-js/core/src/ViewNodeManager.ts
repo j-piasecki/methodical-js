@@ -1,4 +1,4 @@
-import type { ViewNode } from './ViewNode'
+import type { ViewNode } from './ViewNode.js'
 
 export interface ViewNodeManager {
   createView(node: ViewNode): void

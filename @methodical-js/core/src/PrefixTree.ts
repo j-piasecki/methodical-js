@@ -49,27 +49,50 @@ export class PrefixTree {
       return []
     }
 
-    return this.getNodePaths(this.root)
+    return this.getNodePaths(this.root, [])
   }
 
-  private getNodePaths(node: Node): Id[][] {
+  private getNodePaths(node: Node, prefix: Id[]): Id[][] {
     if (node.last || node.children.size === 0) {
-      return [[node.value]]
+      return [[...prefix, node.value]]
     }
 
     const result: Id[][] = []
 
+    prefix.push(node.value)
     for (const [_, child] of node.children) {
-      const childPaths = this.getNodePaths(child)
+      const childPaths = this.getNodePaths(child, prefix)
 
-      childPaths.forEach((path) => {
-        path.unshift(node.value)
-
+      for (const path of childPaths) {
         result.push(path)
-      })
+      }
     }
+    prefix.pop()
 
     return result
+  }
+
+  public findNodeAtPath(path: Id[]): PrefixTree | undefined {
+    let currentNode = this.root
+
+    // skip first element, it's the root
+    for (let i = 1; i < path.length; i++) {
+      const key = path[i]
+      if (currentNode === undefined) {
+        return undefined
+      }
+
+      currentNode = currentNode.children.get(key)
+    }
+
+    if (currentNode === undefined) {
+      return undefined
+    }
+
+    const tree = new PrefixTree()
+    tree.root = { ...currentNode, last: false }
+
+    return tree
   }
 
   public clear() {
@@ -78,5 +101,19 @@ export class PrefixTree {
 
   public isEmpty() {
     return this.root === undefined
+  }
+
+  public toString() {
+    return JSON.stringify(
+      this.root,
+      (key, value) => {
+        if (key === 'children') {
+          return Object.fromEntries(value.entries())
+        }
+
+        return value
+      },
+      2
+    )
   }
 }
