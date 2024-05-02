@@ -1,20 +1,15 @@
 import { EventNodeManager, WorkingTree } from '@methodical-js/core'
+import { registerHandler, unregisterHandler, updateHandler } from './events.js'
 
-// TODO: event system
-
-const WebEventNodeManager: EventNodeManager<unknown> = {
+const WebEventNodeManager: EventNodeManager<string> = {
   registerHandler(target, name, handler) {
-    const canvas = WorkingTree.root.viewReference as HTMLCanvasElement
-    canvas.addEventListener(name, handler)
+    registerHandler(target, name, handler)
   },
   unregisterHandler(target, name, handler) {
-    const canvas = WorkingTree.root.viewReference as HTMLCanvasElement
-    canvas.removeEventListener(name, handler)
+    unregisterHandler(target, name, handler)
   },
   updateHandler(target, name, newHandler, oldHandler) {
-    const canvas = WorkingTree.root.viewReference as HTMLCanvasElement
-    canvas.removeEventListener(name, oldHandler)
-    canvas.addEventListener(name, newHandler)
+    updateHandler(target, name, newHandler, oldHandler)
   },
 }
 

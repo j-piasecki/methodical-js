@@ -1,7 +1,9 @@
 import { ViewNode, ViewNodeManager } from '@methodical-js/core'
 import { RenderFunction } from './types.js'
 
-const DummyCreateView = (_node: ViewNode) => {}
+const DummyCreateView = (node: ViewNode) => {
+  node.viewReference = node.path.join('/')
+}
 const DummDropView = (_node: ViewNode) => {}
 const DummUpdateView = (_oldNode: ViewNode, _newNode: ViewNode) => {}
 

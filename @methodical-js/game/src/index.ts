@@ -1,6 +1,7 @@
 import { WorkingTree } from '@methodical-js/core'
 import { RenderFunction } from './types.js'
 import { renderChildren } from './utils.js'
+import { setupDOMHandlers } from './events.js'
 
 declare module '@methodical-js/core' {
   interface ViewNodeManager {
@@ -20,10 +21,7 @@ class MethodicalGame {
     WorkingTree.setRootViewReference(canvas)
     WorkingTree.performInitialRender()
 
-    // TODO: makes canvas focusable and handle keyboard events, possibly remove this
-    // when implementing a real event system
-    canvas.tabIndex = 1
-
+    setupDOMHandlers(canvas)
     const ctx = canvas.getContext('2d')!
 
     const render = (timestamp: number) => {
