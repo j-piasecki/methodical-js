@@ -1,10 +1,10 @@
 {
   "private": "true",
   "scripts": {
-    "build": "cd @methodical-js/core && yarn build && cd ../web && yarn build",
-    "test": "cd @methodical-js/core && yarn test && cd ../web && yarn test",
-    "format": "cd @methodical-js/core && yarn format && cd ../web && yarn format",
-    "lint": "cd @methodical-js/core && yarn lint && cd ../web && yarn lint",
+    "build": "cd @methodical-js/core && yarn build && cd ../web && yarn build && cd ../game && yarn build",
+    "test": "cd @methodical-js/core && yarn test && cd ../web && yarn test && cd ../game && yarn test",
+    "format": "cd @methodical-js/core && yarn format && cd ../web && yarn format && cd ../game && yarn format",
+    "lint": "cd @methodical-js/core && yarn lint && cd ../web && yarn lint && cd ../game && yarn lint",
     "prepare": "husky install"
   },
   "workspaces": [

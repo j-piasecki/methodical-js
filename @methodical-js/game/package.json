@@ -1,0 +1,36 @@
+{
+  "name": "@methodical-js/game",
+  "version": "0.1.0",
+  "description": "",
+  "license": "MIT",
+  "author": {
+    "name": "Jakub Piasecki"
+  },
+  "main": "build/esm/index.js",
+  "types": "build/ts/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./build/esm/index.js",
+      "require": "./build/cjs/index.js"
+    }
+  },
+  "type": "module",
+  "scripts": {
+    "test": "jest",
+    "build": "yarn tsc && yarn tsc -p tsconfig.cjs.json",
+    "lint": "yarn eslint --ext .ts src/ && yarn prettier --check src/",
+    "format": "prettier --write --list-different src/",
+    "prepack": "yarn build",
+    "prepublishOnly": "yarn test"
+  },
+  "files": [
+    "build",
+    "README.md"
+  ],
+  "devDependencies": {
+    "jest-environment-jsdom": "^29.7.0"
+  },
+  "peerDependencies": {
+    "@methodical-js/core": "^0.1.0"
+  }
+}
