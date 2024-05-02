@@ -17,8 +17,16 @@ export function hasSize(config: BaseConfig): config is BaseConfig & WithSize {
 
 export function renderChildren(node: ViewNode, ctx: CanvasRenderingContext2D) {
   for (const child of node.children) {
-    if (isViewNode(child)) {
-      child.viewManager?.render?.(child, ctx)
+    if (isViewNode(child) && child.viewManager) {
+      if (child.viewManager.render) {
+        child.viewManager.render(child, ctx)
+      } else {
+        for (const grandchild of child.children) {
+          if (isViewNode(grandchild)) {
+            renderChildren(grandchild, ctx)
+          }
+        }
+      }
     }
   }
 }

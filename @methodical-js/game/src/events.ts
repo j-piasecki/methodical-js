@@ -49,8 +49,22 @@ export function dispatchEvent(target: string, name: string, event: unknown) {
   }
 }
 
+const pressedKeys = new Set<string>()
+
 export function setupDOMHandlers(canvas: HTMLCanvasElement) {
   canvas.tabIndex = 1
 
-  canvas.addEventListener('keydown', (e) => dispatchEvent('#', 'keydown', e))
+  canvas.addEventListener('keydown', (e) => {
+    pressedKeys.add(e.key)
+  })
+
+  canvas.addEventListener('keyup', (e) => {
+    pressedKeys.delete(e.key)
+  })
+}
+
+export function dispatchContinousEvents() {
+  for (const key of pressedKeys) {
+    dispatchEvent('#', 'key', { key })
+  }
 }

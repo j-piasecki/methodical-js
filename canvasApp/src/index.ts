@@ -1,31 +1,75 @@
-import { remember } from '@methodical-js/core'
-import Methodical, { Rect, YSort, on } from '@methodical-js/game'
+import Methodical, {
+  Rect,
+  YSort,
+  on,
+  Node,
+  rememberNodePosition,
+  Body,
+  Shape,
+  rememberNodeVelocity,
+} from '@methodical-js/game'
 
 const canvas = document.getElementById('canvas')! as HTMLCanvasElement
 
 YSort({ id: 'root' }, () => {
-  const yellowX = remember(50)
-  const yellowY = remember(30)
+  Node(
+    {
+      id: 'node1',
+      position: { x: 100, y: 680 },
+    },
+    () => {
+      const position = rememberNodePosition()
 
-  Rect({ id: 'rect1', position: { x: 0, y: 20 }, size: { width: 100, height: 100 }, color: 'red' })
-  Rect({
-    id: 'rect2',
-    position: { x: yellowX.value, y: yellowY.value },
-    size: { width: 100, height: 100 },
-    color: 'yellow',
-  })
+      Rect({
+        id: 'rect1',
+        position: position,
+        size: { width: 1000, height: 50 },
+        color: 'red',
+      })
 
-  on('keydown', (e: KeyboardEvent) => {
-    const dist = 0.3 * Methodical.delta
-    if (e.key === 'a') {
-      yellowX.value -= dist
-    } else if (e.key === 'd') {
-      yellowX.value += dist
-    } else if (e.key === 'w') {
-      yellowY.value -= dist
-    } else if (e.key === 's') {
-      yellowY.value += dist
+      Body({ id: 'body1', isStatic: true }, () => {
+        Shape({ id: 'shape1', size: { x: 1000, y: 50 } })
+      })
     }
+  )
+
+  Node({ id: 'node2', position: { x: 400, y: 100 } }, () => {
+    const position = rememberNodePosition()
+    const velocity = rememberNodeVelocity()
+
+    Rect({
+      id: 'rect2',
+      position: position,
+      size: { width: 100, height: 100 },
+      color: 'yellow',
+    })
+
+    Rect({
+      id: 'rect1',
+      position: position,
+      size: { width: 100, height: 100 },
+      color: 'yellow',
+    })
+
+    Body({ id: 'body1' }, () => {
+      Shape({ id: 'shape1', size: { x: 100, y: 100 } })
+    })
+
+    on('key', (e: KeyboardEvent) => {
+      const velocityChange = Methodical.delta * 0.005
+
+      if (e.key === 'a') {
+        velocity.x -= velocityChange
+      }
+      if (e.key === 'd') {
+        velocity.x += velocityChange
+      }
+      if (e.key === 'w') {
+        if (velocity.y === 0) {
+          velocity.y -= 3
+        }
+      }
+    })
   })
 })
 
