@@ -16,7 +16,13 @@ const stateUpdater = createBoundary(() => {
   })
 })
 
-function RecusiveDivs(index: number, count: number, levels: number, first: boolean) {
+const RecusiveDivs = createBoundary<{
+  id: string
+  index: number
+  count: number
+  levels: number
+  first: boolean
+}>(({ index, count, levels, first }) => {
   counter++
   if (levels === 0) {
     if (index === 0 && levels == 0 && first) {
@@ -35,20 +41,26 @@ function RecusiveDivs(index: number, count: number, levels: number, first: boole
     },
     () => {
       for (let i = 0; i < count; i++) {
-        RecusiveDivs(i, count, levels - 1, first && i === 0)
+        RecusiveDivs({
+          id: `${i}-${levels}`,
+          index: i,
+          count,
+          levels: levels - 1,
+          first: first && i === 0,
+        })
       }
     }
   )
-}
+})
 
-export function StressTest() {
+export function StressTestBoundary() {
   Div(
     {
       id: 'stresstest',
       style: {
         width: '100%',
         height: '500px',
-        backgroundColor: 'yellow',
+        backgroundColor: 'orange',
       },
     },
     () => {
@@ -72,7 +84,7 @@ export function StressTest() {
 
       if (render.value) {
         counter = 0
-        RecusiveDivs(0, COUNT, LEVELS, true)
+        RecusiveDivs({ id: 'root', index: 0, count: COUNT, levels: LEVELS, first: true })
         console.log('Called', counter)
       }
     }

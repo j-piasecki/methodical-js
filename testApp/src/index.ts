@@ -11,7 +11,8 @@ import Methodical, {
 import { Tracing } from '@methodical-js/core'
 import { Home } from './home'
 import { Suspense } from './suspense'
-import { StressTest } from './stressTest'
+import { StressTestFlat } from './stressTestFlat'
+import { StressTestBoundary } from './stressTestBoundary'
 import { Lists } from './lists'
 import { CounterExample } from './counter'
 
@@ -23,10 +24,24 @@ interface Example {
 const EXAMPLES: Example[] = [
   { name: 'Home', component: Home },
   { name: 'Suspense', component: Suspense },
-  { name: 'StressTest', component: StressTest },
+  { name: 'StressTestFlat', component: StressTestFlat },
+  { name: 'StressTestBoundary', component: StressTestBoundary },
   { name: 'Lists', component: Lists },
   { name: 'Counter', component: CounterExample },
 ]
+
+let time = performance.now()
+function animationFrame() {
+  const now = performance.now()
+  const passed = now - time
+  if (passed > 30) {
+    console.log('Frame time:', now - time)
+  }
+  time = now
+  requestAnimationFrame(animationFrame)
+}
+
+requestAnimationFrame(animationFrame)
 
 const saveTemplateAsFile = (filename: string, dataObjToWrite: any) => {
   const blob = new Blob([JSON.stringify(dataObjToWrite)], { type: 'text/json' })
