@@ -3,7 +3,7 @@ import RecursiveDivs from './RecursiveDivs.vue'
 import { ref } from 'vue'
 
 const COUNT = 5
-const LEVELS = 6
+const LEVELS = 8
 
 const visible = ref(false)
 const count = ref(0)
