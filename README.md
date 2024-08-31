@@ -2,7 +2,7 @@
 
 ## Uruchamianie aplikacji testowej
 
-W celu uruchomienia aplikacji testowej, konieczne jest użycie memendżera paczek Yarn w wersji 1. Należy zainstalować zależności w głównym katalogu przy użyciu polecenia `yarn`, następnie w katalogu `testApp` wywołać polecenie `yarn start`.
+W celu uruchomienia aplikacji testowej, konieczne jest użycie memendżera paczek Yarn w wersji 1. Należy zainstalować zależności w głównym katalogu przy użyciu polecenia `yarn`, zbudować paczki przy użyciu polecenia `yarn build`, następnie w katalogu `testApp` wywołać polecenie `yarn start`.
 
 ## Wstęp
 
