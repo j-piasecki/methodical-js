@@ -1,5 +1,9 @@
 # methodical-js
 
+## Uruchamianie aplikacji testowej
+
+W celu uruchomienia aplikacji testowej, konieczne jest użycie memendżera paczek Yarn w wersji 1. Należy zainstalować zależności w głównym katalogu przy użyciu polecenia `yarn`, następnie w katalogu `testApp` wywołać polecenie `yarn start`.
+
 ## Wstęp
 
 Framework pozwala na budowanie aplikacji internetowych w oparciu o składanie funkcji. Wybrane elementy HTML mają swoje odpowiedniki w postaci funkcji przyjmujących obiekt konfiguracyjny oraz funkcję będącą ciałem danego komponentu. Wewnątrz ciała możliwe jest wywołanie kolejnych funkcji odpowiadającym elementom, budując w ten sposób drzewiastą strukturę. Każdy obiekt konfiguracyjny musi posiadać identyfikator, który jest unikalny lokalnie, tzn. żaden inny komponent będący jego rówieśnikiem, nie może mieć tego samego identyfikatora (są one używane do śledzenia tego samego elementu pomiędzy różnymi wersjami drzewa). Na przykład, następujący kod:
